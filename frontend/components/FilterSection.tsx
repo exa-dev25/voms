@@ -28,7 +28,7 @@ export default function FilterSection({
   onClear,
   onApply,
 }: FilterSectionProps) {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
 
   const [filterOptions, setFilterOptions] = useState<{
     drivers: FilterOption[];
@@ -57,13 +57,21 @@ export default function FilterSection({
   const [weekSearch, setWeekSearch] = useState("");
 
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const fetchedRef = useRef(false);
+
 
   // Fetch cascade options
+
   const fetchCascadeOptions = async () => {
+    // ⛔ STOP kalau session belum siap
+    if (status !== "authenticated") return;
+    if (!session?.accessToken) return;
+  
     try {
       setLoading(true);
-
+  
       const params = new URLSearchParams();
+  
       if (filters.dateType && filters.dateType !== "select") {
         params.append("dateType", filters.dateType);
       }
@@ -84,106 +92,81 @@ export default function FilterSection({
       ) {
         params.append("originName", filters.route.split("(")[0].trim());
       }
-
-      console.log("🔄 Fetching cascade options with:", params.toString());
-
+  
+      console.log("🔄 Fetching cascade options:", params.toString());
+  
       const res = await fetch(
-        `${API_URL}/api/filter/cascade-options?${params}`,
+        `${API_URL}/api/trips/filter/cascade-options?${params.toString()}`,
         {
-          headers: session?.accessToken
-            ? {
-                Authorization: `Bearer ${session.accessToken}`,
-              }
-            : {},
+          headers: {
+            Authorization: `Bearer ${session.accessToken}`,
+          },
         }
       );
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success) {
-          console.log("📥 Cascade options received:", {
-            drivers: data.drivers?.length || 0,
-            origins: data.origins?.length || 0,
-            destinations: data.destinations?.length || 0,
-          });
-
-          // Format options
-          const formattedDrivers = (data.drivers || []).map((d: any) => ({
-            id: d.id,
-            name: d.name,
-            displayName: d.name,
-          }));
-
-          const formattedOrigins = (data.origins || []).map((o: any) => ({
-            id: o.id,
-            name: o.name,
-            city: o.city || "",
-            displayName: `${o.name}${o.city ? ` (${o.city})` : ""}`,
-          }));
-
-          const formattedDestinations = (data.destinations || []).map(
-            (d: any) => ({
-              id: d.id,
-              name: d.name,
-              city: d.city || "",
-              displayName: `${d.name}${d.city ? ` (${d.city})` : ""}`,
-            })
-          );
-
-          setFilterOptions({
-            drivers: formattedDrivers,
-            origins: formattedOrigins,
-            destinations: formattedDestinations,
-          });
-
-          // Auto-clear dependent fields jika tidak ada data
-          const updatedFilters = { ...filters };
-
-          // Clear driver jika tidak ada driver
-          if (data.drivers?.length === 0 && filters.driver) {
-            updatedFilters.driver = "";
-            updatedFilters.route = "";
-            updatedFilters.departureRoute = "";
-          }
-
-          // Clear route jika tidak ada origin untuk driver tsb
-          if (data.origins?.length === 0 && filters.route) {
-            updatedFilters.route = "";
-            updatedFilters.departureRoute = "";
-          }
-
-          // Clear departure jika tidak ada destination untuk route tsb
-          if (data.destinations?.length === 0 && filters.departureRoute) {
-            updatedFilters.departureRoute = "";
-          }
-
-          onFilterChange(updatedFilters);
-        }
-      } else {
-        console.error("Failed to fetch cascade options");
-        setFilterOptions({
-          drivers: [],
-          origins: [],
-          destinations: [],
-        });
+  
+      if (!res.ok) {
+        console.warn("⚠️ Cascade options fetch failed:", res.status);
+        return; // ⛔ JANGAN reset state
       }
-    } catch (error) {
-      console.error("Error fetching cascade options:", error);
+  
+      const data = await res.json();
+      if (!data.success) return;
+  
+      const formattedDrivers = (data.drivers || []).map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        displayName: d.name,
+      }));
+  
+      const formattedOrigins = (data.origins || []).map((o: any) => ({
+        id: o.id,
+        name: o.name,
+        city: o.city || "",
+        displayName: `${o.name}${o.city ? ` (${o.city})` : ""}`,
+      }));
+  
+      const formattedDestinations = (data.destinations || []).map((d: any) => ({
+        id: d.id,
+        name: d.name,
+        city: d.city || "",
+        displayName: `${d.name}${d.city ? ` (${d.city})` : ""}`,
+      }));
+  
       setFilterOptions({
-        drivers: [],
-        origins: [],
-        destinations: [],
+        drivers: formattedDrivers,
+        origins: formattedOrigins,
+        destinations: formattedDestinations,
       });
+    } catch (err) {
+      console.error("❌ Cascade options error:", err);
+      // ⛔ jangan reset state
     } finally {
       setLoading(false);
     }
   };
 
+
   // Fetch cascade options ketika filter berubah
   useEffect(() => {
+    if (status !== "authenticated") return;
+  
+    // ⛔ cegah double fetch pertama (StrictMode)
+    if (!fetchedRef.current) {
+      fetchedRef.current = true;
+      fetchCascadeOptions();
+      return;
+    }
+  
     fetchCascadeOptions();
-  }, [filters.dateType, filters.dateValue, filters.driver, filters.route]);
+  }, [
+    status,
+    filters.dateType,
+    filters.dateValue,
+    filters.driver,
+    filters.route,
+  ]);
 
+  
   // Handle click outside dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

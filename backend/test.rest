@@ -52,10 +52,10 @@ POST http://localhost:3001/api/assignments
 Content-Type: application/json
 
 {
-  "driverId": 8,
-  "vehicleId": 6,
-  "originId": 4,
-  "destinationId": 5
+  "driverId": 9,
+  "vehicleId": 7,
+  "originId": 6,
+  "destinationId": 7
 }
 
 ##################################################
@@ -65,7 +65,7 @@ POST http://localhost:3001/api/trips/start
 Content-Type: application/json
 
 {
-  "assignmentId": 11
+  "assignmentId": 17
 }
 
 ##################################################
@@ -75,8 +75,8 @@ POST http://localhost:3001/api/gps/push
 Content-Type: application/json
 
 {
-  "tripId": 6,
-  "vehicleId": 6,
+  "tripId": 10,
+  "vehicleId": 7,
   "latitude": -6.300000,
   "longitude": 107.000000,
   "speed": 60
@@ -103,8 +103,8 @@ POST http://localhost:3001/api/trips/end
 Content-Type: application/json
 
 {
-  "tripId": 6,
-  "destinationId": 5,
+  "tripId": 10,
+  "destinationId": 7,
   "avgSpeed": 52
 }
 

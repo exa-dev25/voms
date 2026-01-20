@@ -1,35 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import dynamic from "next/dynamic";
-import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 /* =========================
-   DYNAMIC LEAFLET IMPORT
+   DYNAMIC REACT-LEAFLET
 ========================= */
-const MapContainer = dynamic(
-  () => import("react-leaflet").then(m => m.MapContainer),
-  { ssr: false }
-);
-const TileLayer = dynamic(
-  () => import("react-leaflet").then(m => m.TileLayer),
-  { ssr: false }
-);
-const Marker = dynamic(
-  () => import("react-leaflet").then(m => m.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(
-  () => import("react-leaflet").then(m => m.Popup),
-  { ssr: false }
-);
-const Polyline = dynamic(
-  () => import("react-leaflet").then(m => m.Polyline),
-  { ssr: false }
-);
+const MapContainer = dynamic(() => import("react-leaflet").then(m => m.MapContainer), { ssr: false });
+const TileLayer = dynamic(() => import("react-leaflet").then(m => m.TileLayer), { ssr: false });
+const Marker = dynamic(() => import("react-leaflet").then(m => m.Marker), { ssr: false });
+const Popup = dynamic(() => import("react-leaflet").then(m => m.Popup), { ssr: false });
+const Polyline = dynamic(() => import("react-leaflet").then(m => m.Polyline), { ssr: false });
 
 /* =========================
    TYPES
@@ -41,179 +25,166 @@ type Warehouse = {
   longitude: number;
 };
 
-type ActiveTrip = {
-  tripId: number;
-  color: string;
-  driver: { name: string };
-  vehicle: { plate: string };
+type RouteCache = {
+  [tripId: number]: [number, number][];
 };
 
-type LivePosition = {
-  tripId: number;
-  latitude: number;
-  longitude: number;
-  speed?: number;
-  driver: string;
-  plate: string;
-};
-
-type RoutePoint = {
-  lat: number;
-  lng: number;
-};
-
-/* =========================
-   ICONS
-========================= */
-const warehouseIcon = new L.Icon({
-  iconUrl: "/icons/warehouse.png",
-  iconSize: [32, 32],
-  iconAnchor: [16, 32]
-});
-
-const truckIcon = new L.Icon({
-  iconUrl: "/icons/truck.png",
-  iconSize: [36, 36],
-  iconAnchor: [18, 18]
-});
-
-/* =========================
-   COMPONENT
-========================= */
 export default function LiveFleetMapCard() {
+  const [warehouseIcon, setWarehouseIcon] = useState<any>(null);
+  const [truckIcon, setTruckIcon] = useState<any>(null);
+
   const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [activeTrips, setActiveTrips] = useState<ActiveTrip[]>([]);
-  const [positions, setPositions] = useState<LivePosition[]>([]);
-  const [routes, setRoutes] = useState<Record<number, RoutePoint[]>>({});
+  const [trips, setTrips] = useState<any[]>([]);
+  const [routes, setRoutes] = useState<RouteCache>({});
   const [loading, setLoading] = useState(true);
 
-  /* =========================
-     FETCHERS
-  ========================= */
-  const fetchWarehouses = async () => {
-    const res = await fetch(`${API_URL}/api/warehouses`);
-    return res.json();
-  };
-
-  const fetchActiveTrips = async () => {
-    const res = await fetch(`${API_URL}/api/dashboard/active-trips`);
-    return res.json();
-  };
-
-  const fetchLivePositions = async () => {
-    const res = await fetch(`${API_URL}/api/dashboard/live-positions`);
-    return res.json();
-  };
-
-  const fetchRoute = async (tripId: number) => {
-    const res = await fetch(`${API_URL}/api/dashboard/trip-routes/${tripId}`);
-    return res.json();
-  };
+  const routeLoadingRef = useRef<Set<number>>(new Set());
 
   /* =========================
-     INIT + REALTIME
+     LOAD LEAFLET ICONS
   ========================= */
   useEffect(() => {
-    let interval: NodeJS.Timeout;
+    (async () => {
+      const L = await import("leaflet");
 
-    const init = async () => {
+      setWarehouseIcon(
+        new L.Icon({
+          iconUrl: "https://images.icon-icons.com/3136/PNG/96/warehouse_storage_unit_storehouse_icon_192428.png",
+          iconSize: [32, 32],
+          iconAnchor: [16, 32]
+        })
+      );
+
+      setTruckIcon(
+        new L.Icon({
+          iconUrl: "https://images.icon-icons.com/522/PNG/96/truck_icon-icons.com_52347.png",
+          iconSize: [36, 36],
+          iconAnchor: [18, 18]
+        })
+      );
+    })();
+  }, []);
+
+  /* =========================
+     FETCH ROUTE FROM OSRM
+  ========================= */
+  const fetchRouteOSRM = async (trip: any) => {
+    if (routes[trip.id]) return;
+    if (routeLoadingRef.current.has(trip.id)) return;
+
+    routeLoadingRef.current.add(trip.id);
+
+    try {
+      const o = trip.assignment.origin;
+      const d = trip.assignment.destination;
+
+      const url =
+        `https://router.project-osrm.org/route/v1/driving/` +
+        `${o.longitude},${o.latitude};${d.longitude},${d.latitude}` +
+        `?overview=full&geometries=geojson`;
+
+      const res = await fetch(url);
+      const json = await res.json();
+
+      const coords = json.routes[0].geometry.coordinates.map(
+        ([lng, lat]: [number, number]) => [lat, lng]
+      );
+
+      setRoutes(prev => ({
+        ...prev,
+        [trip.id]: coords
+      }));
+    } catch (e) {
+      console.error("OSRM route error", e);
+    }
+  };
+
+  /* =========================
+     FETCH DATA
+  ========================= */
+  useEffect(() => {
+    let interval: any;
+
+    const load = async () => {
       try {
-        const [wh, trips, pos] = await Promise.all([
-          fetchWarehouses(),
-          fetchActiveTrips(),
-          fetchLivePositions()
+        const [wh, mapData] = await Promise.all([
+          fetch(`${API_URL}/api/warehouses`).then(r => r.json()),
+          fetch(`${API_URL}/api/dashboard/map`).then(r => r.json())
         ]);
 
         setWarehouses(wh);
-        setActiveTrips(trips);
-        setPositions(pos);
+        setTrips(mapData);
 
-        // fetch route per trip
-        const routeMap: Record<number, RoutePoint[]> = {};
-        for (const trip of trips) {
-          routeMap[trip.tripId] = await fetchRoute(trip.tripId);
-        }
-        setRoutes(routeMap);
-      } catch (err) {
-        console.error("Map init error", err);
+        mapData.forEach(fetchRouteOSRM);
+      } catch (e) {
+        console.error("Map load error", e);
       } finally {
         setLoading(false);
       }
 
-      // realtime GPS
       interval = setInterval(async () => {
-        const pos = await fetchLivePositions();
-        setPositions(pos);
+        const mapData = await fetch(`${API_URL}/api/dashboard/map`).then(r => r.json());
+        setTrips(mapData);
+        mapData.forEach(fetchRouteOSRM);
       }, 5000);
     };
 
-    init();
+    load();
     return () => clearInterval(interval);
   }, []);
 
-  /* =========================
-     RENDER
-  ========================= */
-  return (
-    <div className="bg-[#0D1117] border border-white/10 rounded-xl p-6">
-      <h3 className="text-white font-semibold mb-4">Live Fleet Overview</h3>
-
-      <div className="h-[420px] rounded-xl overflow-hidden">
-        {loading ? (
-          <div className="h-full flex items-center justify-center text-gray-400">
-            Loading map...
-          </div>
-        ) : (
-          <MapContainer
-            center={[-6.2, 106.8]}
-            zoom={6}
-            style={{ height: "100%", width: "100%" }}
-          >
-            <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-            {/* WAREHOUSES */}
-            {warehouses.map(w => (
-              <Marker
-                key={w.id}
-                position={[w.latitude, w.longitude]}
-                icon={warehouseIcon}
-              >
-                <Popup>
-                  <strong>{w.name}</strong>
-                </Popup>
-              </Marker>
-            ))}
-
-            {/* ROUTES */}
-            {activeTrips.map(trip =>
-              routes[trip.tripId] ? (
-                <Polyline
-                  key={trip.tripId}
-                  positions={routes[trip.tripId].map(p => [p.lat, p.lng])}
-                  pathOptions={{ color: trip.color, weight: 4 }}
-                />
-              ) : null
-            )}
-
-            {/* TRUCKS */}
-            {positions.map(pos => (
-              <Marker
-                key={pos.tripId}
-                position={[pos.latitude, pos.longitude]}
-                icon={truckIcon}
-              >
-                <Popup>
-                  🚚 <b>{pos.plate}</b>
-                  <br />
-                  👤 {pos.driver}
-                  <br />
-                  ⚡ {pos.speed ?? 0} km/h
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
-        )}
+  if (!warehouseIcon || !truckIcon || loading) {
+    return (
+      <div className="h-[420px] flex items-center justify-center text-gray-400">
+        Loading map...
       </div>
+    );
+  }
+
+  return (
+    <div className="bg-[#0D1117] border border-white/10 rounded-xl p-4 h-[460px]">
+      <h3 className="text-white font-semibold mb-2">Live Fleet Tracking</h3>
+
+      <MapContainer center={[-6.5, 107]} zoom={6} style={{ height: "100%" }}>
+        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+
+        {/* 🏢 WAREHOUSES */}
+        {warehouses.map(w => (
+          <Marker key={`wh-${w.id}`} position={[w.latitude, w.longitude]} icon={warehouseIcon}>
+            <Popup>
+              <b>{w.name}</b>
+            </Popup>
+          </Marker>
+        ))}
+
+        {/* 🚚 TRIPS */}
+        {trips.map(trip => {
+          const pos = trip.assignment.vehicle.positions[0];
+          if (!pos) return null;
+
+          return (
+            <div key={trip.id}>
+              {/* 🔵 REAL ROUTE */}
+              {routes[trip.id] && (
+                <Polyline
+                  positions={routes[trip.id]}
+                  pathOptions={{ color: "#3b82f6", weight: 4 }}
+                />
+              )}
+
+              {/* 🚚 TRUCK */}
+              <Marker position={[pos.latitude, pos.longitude]} icon={truckIcon}>
+                <Popup>
+                  🚚 <b>{trip.assignment.vehicle.plate}</b><br />
+                  👤 {trip.assignment.driver.name}<br />
+                  ⚡ {pos.speed ?? 0} km/h<br />
+                  📍 {trip.assignment.origin.name} → {trip.assignment.destination.name}
+                </Popup>
+              </Marker>
+            </div>
+          );
+        })}
+      </MapContainer>
     </div>
   );
 }
