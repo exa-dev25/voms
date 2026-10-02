@@ -1,8 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
-import dynamic from "next/dynamic";
+import { useState } from "react";
 
 import { ProtectedPage } from "@/components/ProtectedPage";
 import FilterSection from "@/components/FilterSection";
@@ -13,17 +11,9 @@ import LiveFleetMapCard from "./components/LiveFleetMapCard";
 import PerformanceChart from "./components/PerformanceChart";
 import TripStatusDonut from "./components/TripStatusDonut";
 
-import { Filters, VehiclePosition } from "@/types";
-
-const VehicleMap = dynamic(() => import("@/components/map/VehicleMap"), {
-  ssr: false,
-});
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+import { Filters } from "@/types";
 
 export default function DashboardPage() {
-  const { data: session } = useSession();
-
   /* =======================
    * FILTER STATE
    * ======================= */
@@ -54,71 +44,6 @@ export default function DashboardPage() {
   };
 
   /* =======================
-   * MAP DATA
-   * ======================= */
-  const [vehiclePositions, setVehiclePositions] = useState<VehiclePosition[]>(
-    []
-  );
-  const [mapError, setMapError] = useState("");
-  const [mapLoading, setMapLoading] = useState(true);
-
-  useEffect(() => {
-    if (!session?.accessToken) return;
-
-    const loadVehiclePositions = async () => {
-      try {
-        setMapLoading(true);
-
-        const res = await fetch(`${API_URL}/api/dashboard/map`, {
-          headers: {
-            Authorization: `Bearer ${session.accessToken}`,
-          },
-        });
-
-        if (!res.ok) {
-          throw new Error("Failed to fetch map data");
-        }
-
-        const data = await res.json();
-        const positions: VehiclePosition[] = [];
-
-        if (data.vehicles) {
-          data.vehicles.forEach((vehicle: any) => {
-            if (vehicle.positions?.length) {
-              const latest = vehicle.positions[0];
-              positions.push({
-                id: latest.id,
-                vehicleId: vehicle.id,
-                name: vehicle.plate,
-                driver: "Unknown",
-                route: "No Active Trip",
-                latitude: latest.latitude,
-                longitude: latest.longitude,
-                speed: latest.speed || 0,
-                timestamp: latest.timestamp,
-                status: "IDLE",
-                startTime: null,
-                endTime: null,
-              });
-            }
-          });
-        }
-
-        setVehiclePositions(positions);
-        setMapError("");
-      } catch (err) {
-        setMapError("Failed to load vehicle positions");
-      } finally {
-        setMapLoading(false);
-      }
-    };
-
-    loadVehiclePositions();
-    const interval = setInterval(loadVehiclePositions, 30000);
-    return () => clearInterval(interval);
-  }, [session?.accessToken]);
-
-  /* =======================
    * RENDER
    * ======================= */
   return (
@@ -147,19 +72,22 @@ export default function DashboardPage() {
           </button>
         </div>
 
-        {/* ================= FILTER ================= */}
-        <FilterSection
-          filters={draftFilters}
-          onFilterChange={setDraftFilters}
-          onClear={handleClearFilters}
-          onApply={handleApplyFilters}
-        ></FilterSection>
-
         {/* ================= STATS ================= */}
         <StatsOverview />
 
         {/* ================= MAP ================= */}
-        <LiveFleetMapCard positions={vehiclePositions} />
+        <LiveFleetMapCard />
+
+        {/* ================= FILTER AND TABLE ================= */}
+        <section className='space-y-4'>
+          <FilterSection
+            filters={draftFilters}
+            onFilterChange={setDraftFilters}
+            onClear={handleClearFilters}
+            onApply={handleApplyFilters}
+          />
+          <DataTable filters={filters} />
+        </section>
 
         {/* ================= CHARTS ================= */}
         <div className='grid grid-cols-1 xl:grid-cols-3 gap-6'>
@@ -168,10 +96,6 @@ export default function DashboardPage() {
           </div>
           <TripStatusDonut />
         </div>
-
-        {/* ================= TABLE ================= */}
-
-          <DataTable filters={filters} />
       </div>
     </ProtectedPage>
   );

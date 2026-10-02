@@ -120,4 +120,17 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  button,
+  [role="button"],
+  select,
+  input[type="checkbox"],
+  input[type="radio"],
+  input[type="range"] {
+    cursor: pointer;
+  }
+
+  button:disabled {
+    cursor: not-allowed;
+  }
 }

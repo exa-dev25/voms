@@ -7,17 +7,19 @@ exports.createAssignment = (data) => {
       vehicleId: data.vehicleId,
       originId: data.originId,
       destinationId: data.destinationId,
-      status: "PENDING"
-    }
+      status: "PENDING",
+    },
   });
 };
 
 exports.getAssignments = () => {
   return prisma.assignment.findMany({
     include: {
-      order: { include: { origin: true, destination: true } },
       driver: true,
-      vehicle: true
-    }
+      vehicle: true,
+      origin: true,
+      destination: true,
+      trip: true,
+    },
   });
 };

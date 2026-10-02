@@ -29,6 +29,21 @@ enum AssignmentStatus {
   CANCELLED
 }
 
+enum TelemetryMessageType {
+  GPS
+  IGNITION_START
+  HEARTBEAT
+  ALERT
+  RFID_EVENT
+}
+
+enum RFIDEventType {
+  ENTER
+  EXIT
+  SCAN
+  CONTINUOUS
+}
+
 //////////////////////////////////////////////////
 // USER & LOG
 //////////////////////////////////////////////////
@@ -83,16 +98,21 @@ model Driver {
 }
 
 model Vehicle {
-  id        Int      @id @default(autoincrement())
-  plate     String   @unique
-  type      String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  plate        String   @unique
+  type         String?
+  deviceId     String?  @unique
+  imei         String?  @unique
+  serialNumber String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 
-  assignments Assignment[]
-  trips       Trip[]
-  positions   Position[]
-  statuses    VehicleStatus[]
+  assignments       Assignment[]
+  trips             Trip[]
+  positions         Position[]
+  statuses          VehicleStatus[]
+  telemetryMessages TelemetryMessage[]
+  rfidEvents        RFIDEvent[]
 }
 
 model Warehouse {
@@ -160,7 +180,8 @@ model Trip {
   origin      Warehouse @relation("OriginWarehouse", fields: [originId], references: [id])
   destination Warehouse @relation("DestinationWarehouse", fields: [destinationId], references: [id])
 
-  positions Position[]
+  positions  Position[]
+  rfidEvents RFIDEvent[]
 
   @@index([status])
   @@index([startTime])
@@ -171,27 +192,63 @@ model Trip {
 //////////////////////////////////////////////////
 
 model Position {
-  id        Int @id @default(autoincrement())
-  tripId    Int
+  id        Int  @id @default(autoincrement())
+  tripId    Int?
   vehicleId Int
 
   latitude  Float
   longitude Float
   speed     Float?
+  gpsStatus String?
+  accuracy  Float?
+  hdop      Float?
   timestamp DateTime @default(now())
 
-  trip    Trip    @relation(fields: [tripId], references: [id], onDelete: Cascade)
+  trip    Trip?   @relation(fields: [tripId], references: [id], onDelete: Cascade)
   vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
 
   @@index([timestamp])
 }
 
 model VehicleStatus {
-  id        Int      @id @default(autoincrement())
-  vehicleId Int
-  isOnline  Boolean  @default(true)
-  battery   Int?
-  timestamp DateTime @default(now())
+  id           Int      @id @default(autoincrement())
+  vehicleId    Int
+  isOnline     Boolean  @default(true)
+  battery      Int?
+  ignitionOn   Boolean?
+  engineStatus String?
+  timestamp    DateTime @default(now())
 
   vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+}
+
+model TelemetryMessage {
+  id            Int                  @id @default(autoincrement())
+  vehicleId     Int
+  schemaVersion String
+  messageType   TelemetryMessageType
+  timestamp     DateTime
+  payload       Json
+  createdAt     DateTime             @default(now())
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, timestamp])
+  @@index([messageType, timestamp])
+}
+
+model RFIDEvent {
+  id        Int           @id @default(autoincrement())
+  vehicleId Int
+  tripId    Int?
+  eventType RFIDEventType
+  tagId     String?
+  timestamp DateTime
+  payload   Json?
+
+  vehicle Vehicle @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+  trip    Trip?   @relation(fields: [tripId], references: [id], onDelete: Cascade)
+
+  @@index([vehicleId, timestamp])
+  @@index([tripId, timestamp])
 }

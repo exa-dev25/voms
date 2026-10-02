@@ -1,190 +1,208 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
 import "leaflet/dist/leaflet.css";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+const MapContainer = dynamic(
+  () => import("react-leaflet").then((m) => m.MapContainer),
+  { ssr: false },
+);
+const TileLayer = dynamic(
+  () => import("react-leaflet").then((m) => m.TileLayer),
+  { ssr: false },
+);
+const CircleMarker = dynamic(
+  () => import("react-leaflet").then((m) => m.CircleMarker),
+  { ssr: false },
+);
+const Polyline = dynamic(
+  () => import("react-leaflet").then((m) => m.Polyline),
+  { ssr: false },
+);
+const Popup = dynamic(() => import("react-leaflet").then((m) => m.Popup), {
+  ssr: false,
+});
+const Tooltip = dynamic(() => import("react-leaflet").then((m) => m.Tooltip), {
+  ssr: false,
+});
 
-/* =========================
-   DYNAMIC REACT-LEAFLET
-========================= */
-const MapContainer = dynamic(() => import("react-leaflet").then(m => m.MapContainer), { ssr: false });
-const TileLayer = dynamic(() => import("react-leaflet").then(m => m.TileLayer), { ssr: false });
-const Marker = dynamic(() => import("react-leaflet").then(m => m.Marker), { ssr: false });
-const Popup = dynamic(() => import("react-leaflet").then(m => m.Popup), { ssr: false });
-const Polyline = dynamic(() => import("react-leaflet").then(m => m.Polyline), { ssr: false });
+type Position = {
+  latitude: number;
+  longitude: number;
+  speed?: number | null;
+  timestamp?: string;
+};
 
-/* =========================
-   TYPES
-========================= */
-type Warehouse = {
-  id: number;
+type Location = {
   name: string;
   latitude: number;
   longitude: number;
 };
 
-type RouteCache = {
-  [tripId: number]: [number, number][];
+type ActiveTrip = {
+  id: number;
+  assignment?: {
+    driver?: { name: string };
+    origin?: Location;
+    destination?: Location;
+    vehicle?: { plate: string; positions?: Position[] };
+  };
 };
 
 export default function LiveFleetMapCard() {
-  const [warehouseIcon, setWarehouseIcon] = useState<any>(null);
-  const [truckIcon, setTruckIcon] = useState<any>(null);
-
-  const [warehouses, setWarehouses] = useState<Warehouse[]>([]);
-  const [trips, setTrips] = useState<any[]>([]);
-  const [routes, setRoutes] = useState<RouteCache>({});
+  const { data: session, status } = useSession();
+  const [trips, setTrips] = useState<ActiveTrip[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
-  const routeLoadingRef = useRef<Set<number>>(new Set());
-
-  /* =========================
-     LOAD LEAFLET ICONS
-  ========================= */
   useEffect(() => {
-    (async () => {
-      const L = await import("leaflet");
+    if (status !== "authenticated" || !session?.accessToken) return;
+    let active = true;
 
-      setWarehouseIcon(
-        new L.Icon({
-          iconUrl: "https://images.icon-icons.com/3136/PNG/96/warehouse_storage_unit_storehouse_icon_192428.png",
-          iconSize: [32, 32],
-          iconAnchor: [16, 32]
-        })
-      );
-
-      setTruckIcon(
-        new L.Icon({
-          iconUrl: "https://images.icon-icons.com/522/PNG/96/truck_icon-icons.com_52347.png",
-          iconSize: [36, 36],
-          iconAnchor: [18, 18]
-        })
-      );
-    })();
-  }, []);
-
-  /* =========================
-     FETCH ROUTE FROM OSRM
-  ========================= */
-  const fetchRouteOSRM = async (trip: any) => {
-    if (routes[trip.id]) return;
-    if (routeLoadingRef.current.has(trip.id)) return;
-
-    routeLoadingRef.current.add(trip.id);
-
-    try {
-      const o = trip.assignment.origin;
-      const d = trip.assignment.destination;
-
-      const url =
-        `https://router.project-osrm.org/route/v1/driving/` +
-        `${o.longitude},${o.latitude};${d.longitude},${d.latitude}` +
-        `?overview=full&geometries=geojson`;
-
-      const res = await fetch(url);
-      const json = await res.json();
-
-      const coords = json.routes[0].geometry.coordinates.map(
-        ([lng, lat]: [number, number]) => [lat, lng]
-      );
-
-      setRoutes(prev => ({
-        ...prev,
-        [trip.id]: coords
-      }));
-    } catch (e) {
-      console.error("OSRM route error", e);
-    }
-  };
-
-  /* =========================
-     FETCH DATA
-  ========================= */
-  useEffect(() => {
-    let interval: any;
-
-    const load = async () => {
+    const loadTrips = async () => {
       try {
-        const [wh, mapData] = await Promise.all([
-          fetch(`${API_URL}/api/warehouses`).then(r => r.json()),
-          fetch(`${API_URL}/api/dashboard/map`).then(r => r.json())
-        ]);
+        const response = await fetch(`${API_URL}/api/dashboard/map`, {
+          cache: "no-store",
+          headers: { Authorization: `Bearer ${session.accessToken}` },
+        });
+        if (!response.ok) throw new Error("Failed to load live trips");
 
-        setWarehouses(wh);
-        setTrips(mapData);
-
-        mapData.forEach(fetchRouteOSRM);
-      } catch (e) {
-        console.error("Map load error", e);
+        const result = await response.json();
+        if (!Array.isArray(result)) throw new Error("Unexpected map response");
+        if (active) {
+          setTrips(result);
+          setError("");
+        }
+      } catch {
+        if (active) setError("Live fleet data could not be loaded.");
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
-
-      interval = setInterval(async () => {
-        const mapData = await fetch(`${API_URL}/api/dashboard/map`).then(r => r.json());
-        setTrips(mapData);
-        mapData.forEach(fetchRouteOSRM);
-      }, 5000);
     };
 
-    load();
-    return () => clearInterval(interval);
-  }, []);
+    void loadTrips();
+    const interval = setInterval(loadTrips, 30000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, [session?.accessToken, status]);
 
-  if (!warehouseIcon || !truckIcon || loading) {
-    return (
-      <div className="h-[420px] flex items-center justify-center text-gray-400">
-        Loading map...
-      </div>
-    );
-  }
+  const mappedTrips = trips.flatMap((trip) => {
+    const assignment = trip.assignment;
+    const position = assignment?.vehicle?.positions?.[0];
+    const origin = assignment?.origin;
+    const destination = assignment?.destination;
+    if (!assignment || !origin || !destination || !position) return [];
+    return [{ trip, assignment, position, origin, destination }];
+  });
+  const first = mappedTrips[0];
+  const center: [number, number] = first
+    ? [first.position.latitude, first.position.longitude]
+    : [-6.2, 106.8];
 
   return (
-    <div className="bg-[#0D1117] border border-white/10 rounded-xl p-4 h-[460px]">
-      <h3 className="text-white font-semibold mb-2">Live Fleet Tracking</h3>
+    <section className='overflow-hidden rounded-lg border border-slate-200 bg-white'>
+      <div className='flex items-center justify-between gap-4 px-5 py-4'>
+        <div>
+          <h2 className='text-base font-semibold text-slate-900'>
+            Live fleet tracking
+          </h2>
+          <p className='mt-1 text-sm text-slate-500'>
+            {loading
+              ? "Loading live positions…"
+              : `${mappedTrips.length} active vehicles`}
+          </p>
+        </div>
+        <span className='flex items-center gap-2 text-xs font-medium text-slate-600'>
+          <span className='h-2 w-2 rounded-full bg-emerald-500' />
+          Updated every 30 sec
+        </span>
+      </div>
 
-      <MapContainer center={[-6.5, 107]} zoom={6} style={{ height: "100%" }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+      <div className='relative h-[360px] border-t border-slate-200 sm:h-[420px]'>
+        <MapContainer
+          center={center}
+          zoom={11}
+          scrollWheelZoom={false}
+          style={{ height: "100%", width: "100%" }}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
+          />
 
-        {/* 🏢 WAREHOUSES */}
-        {warehouses.map(w => (
-          <Marker key={`wh-${w.id}`} position={[w.latitude, w.longitude]} icon={warehouseIcon}>
-            <Popup>
-              <b>{w.name}</b>
-            </Popup>
-          </Marker>
-        ))}
-
-        {/* 🚚 TRIPS */}
-        {trips.map(trip => {
-          const pos = trip.assignment.vehicle.positions[0];
-          if (!pos) return null;
-
-          return (
-            <div key={trip.id}>
-              {/* 🔵 REAL ROUTE */}
-              {routes[trip.id] && (
+          {mappedTrips.map(
+            ({ trip, assignment, position, origin, destination }) => (
+              <Fragment key={trip.id}>
                 <Polyline
-                  positions={routes[trip.id]}
-                  pathOptions={{ color: "#3b82f6", weight: 4 }}
+                  positions={[
+                    [origin.latitude, origin.longitude],
+                    [position.latitude, position.longitude],
+                    [destination.latitude, destination.longitude],
+                  ]}
+                  pathOptions={{ color: "#397cf6", opacity: 0.85, weight: 4 }}
                 />
-              )}
+                <CircleMarker
+                  center={[origin.latitude, origin.longitude]}
+                  radius={5}
+                  pathOptions={{
+                    color: "#fff",
+                    fillColor: "#64748b",
+                    fillOpacity: 1,
+                    weight: 2,
+                  }}
+                >
+                  <Tooltip direction='top' offset={[0, -6]}>
+                    {origin.name}
+                  </Tooltip>
+                </CircleMarker>
+                <CircleMarker
+                  center={[position.latitude, position.longitude]}
+                  radius={9}
+                  pathOptions={{
+                    color: "#fff",
+                    fillColor: "#397cf6",
+                    fillOpacity: 1,
+                    weight: 3,
+                  }}
+                >
+                  <Popup>
+                    <strong>{assignment.vehicle?.plate}</strong>
+                    <br />
+                    {assignment.driver?.name || "Driver unavailable"}
+                    <br />
+                    {position.speed ?? 0} km/h
+                  </Popup>
+                </CircleMarker>
+                <CircleMarker
+                  center={[destination.latitude, destination.longitude]}
+                  radius={5}
+                  pathOptions={{
+                    color: "#fff",
+                    fillColor: "#10b981",
+                    fillOpacity: 1,
+                    weight: 2,
+                  }}
+                >
+                  <Tooltip direction='top' offset={[0, -6]}>
+                    {destination.name}
+                  </Tooltip>
+                </CircleMarker>
+              </Fragment>
+            ),
+          )}
+        </MapContainer>
 
-              {/* 🚚 TRUCK */}
-              <Marker position={[pos.latitude, pos.longitude]} icon={truckIcon}>
-                <Popup>
-                  🚚 <b>{trip.assignment.vehicle.plate}</b><br />
-                  👤 {trip.assignment.driver.name}<br />
-                  ⚡ {pos.speed ?? 0} km/h<br />
-                  📍 {trip.assignment.origin.name} → {trip.assignment.destination.name}
-                </Popup>
-              </Marker>
-            </div>
-          );
-        })}
-      </MapContainer>
-    </div>
+        {!loading && (error || mappedTrips.length === 0) && (
+          <div className='absolute inset-x-0 bottom-3 mx-auto w-fit rounded-md bg-white/95 px-3 py-2 text-sm text-slate-600 shadow'>
+            {error || "No active trips with GPS positions."}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }

@@ -16,6 +16,7 @@ const prisma = require("./src/lib/prisma");
 
 // ---------- MQTT ----------
 const initMQTT = require("./src/mqtt/mqttClient");
+const { authMiddleware } = require("./middleware/auth");
 
 // ---------- ROUTES ----------
 const authRoutes = require("./src/routes/auth.routes");
@@ -46,8 +47,8 @@ app.set("trust proxy", true);
 app.use(
   cors({
     origin: process.env.CORS_ORIGIN || true,
-    credentials: true
-  })
+    credentials: true,
+  }),
 );
 
 app.use(express.json());
@@ -62,6 +63,7 @@ initMQTT();
 // API ROUTES
 // ======================================================
 app.use("/api/auth", authRoutes);
+app.use("/api", authMiddleware);
 app.use("/api/activity", activityRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api/trips", tripFilterRoutes);
@@ -83,7 +85,7 @@ app.get("/health", (req, res) => {
   res.json({
     status: "OK",
     uptime: process.uptime(),
-    timestamp: new Date()
+    timestamp: new Date(),
   });
 });
 

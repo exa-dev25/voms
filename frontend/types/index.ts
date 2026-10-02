@@ -21,7 +21,6 @@ export interface VehiclePosition {
   timestamp?: string;
 }
 
-
 // ===============================
 // DASHBOARD STATS (for StatsCard)
 // ===============================
@@ -35,9 +34,8 @@ export interface VehicleStats {
   early: number;
 
   avgTripDuration: string | null; // contoh: "32 mins"
-  avgSpeed: number | null;        // contoh: 45 (km/h)
+  avgSpeed: number | null; // contoh: 45 (km/h)
 }
-
 
 // ===============================
 // FILTER OPTIONS
@@ -48,19 +46,17 @@ export interface FilterOptions {
   destinations: Array<{ id: number; name: string; city: string }>;
 }
 
-
 // ===============================
 // DASHBOARD FILTERS (GLOBAL FILTER)
 // ===============================
 export interface Filters {
-  dateType: "current" | "daily" | "weekly" | "monthly";
+  dateType: "select" | "current" | "daily" | "weekly" | "monthly";
   dateValue?: string;
 
   driver: string;
   route: string;
   departureRoute?: string;
 }
-
 
 // ===============================
 // TRIP DATA (for DataTable)
@@ -85,6 +81,12 @@ export interface Trip {
     plate: string;
     type?: string;
     positions: any[];
+    statuses?: Array<{
+      ignitionOn?: boolean | null;
+      engineStatus?: string | null;
+      battery?: number | null;
+      timestamp: string;
+    }>;
   };
   origin: {
     id: number;
@@ -101,11 +103,20 @@ export interface Trip {
     longitude: number;
   };
   positions: any[];
+  rfidEvents?: Array<{
+    id: number;
+    eventType: "ENTER" | "EXIT" | "SCAN" | "CONTINUOUS";
+    tagId?: string | null;
+    timestamp: string;
+  }>;
   latestPosition?: {
     id: number;
     latitude: number;
     longitude: number;
     speed?: number;
+    gpsStatus?: string | null;
+    accuracy?: number | null;
+    hdop?: number | null;
     timestamp: string;
   };
 }
@@ -118,7 +129,6 @@ export interface FilterResponse {
   trips: Trip[];
   count: number;
 }
-
 
 // ===============================
 // MQTT PAYLOAD (IoT → Backend)
@@ -135,7 +145,6 @@ export interface MQTTMessage {
   };
   timestamp: number;
 }
-
 
 // ===============================
 // LoRaWAN Payload (Optional future support)

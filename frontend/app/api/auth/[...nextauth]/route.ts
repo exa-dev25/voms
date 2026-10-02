@@ -2,7 +2,7 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -14,28 +14,32 @@ export const authOptions: NextAuthOptions = {
       },
 
       async authorize(credentials) {
-        if (!credentials) return null;
+        if (!credentials?.email || !credentials?.password) return null;
 
-        const res = await fetch(`${API_URL}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: credentials.email,
-            password: credentials.password,
-          }),
-        });
+        try {
+          const res = await fetch(`${API_URL}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
 
-        const data = await res.json();
-        if (!res.ok || !data.token) return null;
+          const data = await res.json();
+          if (!res.ok || !data?.success || !data?.token) return null;
 
-        // NextAuth return bentuk user bebas + accessToken
-        return {
-          id: data.user.id,
-          name: data.user.name,
-          email: data.user.email,
-          role: data.user.role,
-          accessToken: data.token,
-        };
+          return {
+            id: data.user?.id ?? "",
+            name: data.user?.name ?? data.user?.email ?? "User",
+            email: data.user?.email ?? credentials.email,
+            role: data.user?.role ?? "VIEWER",
+            accessToken: data.token,
+          };
+        } catch (error) {
+          console.error("Auth login failed:", error);
+          return null;
+        }
       },
     }),
   ],

@@ -14,17 +14,17 @@ async function getMapData() {
             include: {
               positions: {
                 take: 1,
-                orderBy: { timestamp: "desc" }
+                orderBy: { timestamp: "desc" },
               },
               statuses: {
                 take: 1,
-                orderBy: { timestamp: "desc" }
-              }
-            }
-          }
-        }
-      }
-    }
+                orderBy: { timestamp: "desc" },
+              },
+            },
+          },
+        },
+      },
+    },
   });
 }
 
@@ -36,8 +36,8 @@ async function getActiveTrips() {
       driver: true,
       vehicle: true,
       origin: true,
-      destination: true
-    }
+      destination: true,
+    },
   });
 
   const colors = [
@@ -46,7 +46,7 @@ async function getActiveTrips() {
     "#3357FF",
     "#F39C12",
     "#9B59B6",
-    "#1ABC9C"
+    "#1ABC9C",
   ];
 
   return trips.map((trip, index) => ({
@@ -55,27 +55,27 @@ async function getActiveTrips() {
 
     driver: {
       id: trip.driver.id,
-      name: trip.driver.name
+      name: trip.driver.name,
     },
 
     vehicle: {
       id: trip.vehicle.id,
-      plate: trip.vehicle.plate
+      plate: trip.vehicle.plate,
     },
 
     origin: {
       id: trip.origin.id,
       name: trip.origin.name,
       lat: trip.origin.latitude,
-      lng: trip.origin.longitude
+      lng: trip.origin.longitude,
     },
 
     destination: {
       id: trip.destination.id,
       name: trip.destination.name,
       lat: trip.destination.latitude,
-      lng: trip.destination.longitude
-    }
+      lng: trip.destination.longitude,
+    },
   }));
 }
 
@@ -89,16 +89,16 @@ async function getLivePositions() {
         include: {
           positions: {
             take: 1,
-            orderBy: { timestamp: "desc" }
-          }
-        }
-      }
-    }
+            orderBy: { timestamp: "desc" },
+          },
+        },
+      },
+    },
   });
 
   return trips
-    .filter(t => t.vehicle.positions.length)
-    .map(t => {
+    .filter((t) => t.vehicle.positions.length)
+    .map((t) => {
       const pos = t.vehicle.positions[0];
 
       return {
@@ -109,7 +109,7 @@ async function getLivePositions() {
         speed: pos.speed,
         driver: t.driver.name,
         plate: t.vehicle.plate,
-        timestamp: pos.timestamp
+        timestamp: pos.timestamp,
       };
     });
 }
@@ -124,22 +124,24 @@ async function getDashboardStats() {
     tripsToday,
     scheduledTrips,
     completedTrips,
-    delayedTrips
+    delayedTrips,
   ] = await Promise.all([
     prisma.trip.groupBy({
       by: ["vehicleId"],
-      where: { status: "ON_TRIP" }
+      where: { status: "ON_TRIP" },
     }),
     prisma.trip.count({ where: { startTime: { gte: today } } }),
     prisma.assignment.count({ where: { createdAt: { gte: today } } }),
     prisma.trip.count({ where: { status: "COMPLETED" } }),
     prisma.trip.count({
-      where: { status: "COMPLETED", avgSpeed: { lt: 40 } }
-    })
+      where: { status: "COMPLETED", avgSpeed: { lt: 40 } },
+    }),
   ]);
 
   const onTimePerformance =
-    completedTrips === 0 ? 0 : ((completedTrips - delayedTrips) / completedTrips) * 100;
+    completedTrips === 0
+      ? 0
+      : ((completedTrips - delayedTrips) / completedTrips) * 100;
 
   const delayRate =
     completedTrips === 0 ? 0 : (delayedTrips / completedTrips) * 100;
@@ -150,7 +152,7 @@ async function getDashboardStats() {
     tripsToday,
     scheduledTrips,
     onTimePerformance: Number(onTimePerformance.toFixed(1)),
-    delayRate: Number(delayRate.toFixed(1))
+    delayRate: Number(delayRate.toFixed(1)),
   };
 }
 
@@ -167,9 +169,9 @@ async function getPerformance(range = "7d") {
   const trips = await prisma.trip.findMany({
     where: {
       status: "COMPLETED",
-      endTime: { gte: startDate }
+      endTime: { gte: startDate },
     },
-    select: { endTime: true, avgSpeed: true }
+    select: { endTime: true, avgSpeed: true },
   });
 
   const dayMap = {};
@@ -197,22 +199,28 @@ async function getPerformance(range = "7d") {
   return {
     data: result,
     average: {
-      onTime: Math.round(result.reduce((a, b) => a + b.onTime, 0) / result.length),
-      delay: Math.round(result.reduce((a, b) => a + b.delay, 0) / result.length)
-    }
+      onTime: Math.round(
+        result.reduce((a, b) => a + b.onTime, 0) / result.length,
+      ),
+      delay: Math.round(
+        result.reduce((a, b) => a + b.delay, 0) / result.length,
+      ),
+    },
   };
 }
 
 // ================= TRIP STATUS =================
 async function getTripStatus() {
   const trips = await prisma.trip.findMany({
-    select: { status: true, avgSpeed: true }
+    select: { status: true, avgSpeed: true },
   });
 
-  let onTime = 0, delayed = 0, atRisk = 0;
+  let onTime = 0,
+    delayed = 0,
+    atRisk = 0;
 
   for (const trip of trips) {
-    if (trip.status === "ONGOING") atRisk++;
+    if (trip.status === "ON_TRIP") atRisk++;
     else if (trip.status === "COMPLETED") {
       if (trip.avgSpeed >= 40) onTime++;
       else delayed++;
@@ -223,10 +231,22 @@ async function getTripStatus() {
 
   return {
     data: [
-      { name: "On Time", value: Math.round((onTime / total) * 100), color: "#10b981" },
-      { name: "Delayed", value: Math.round((delayed / total) * 100), color: "#3b82f6" },
-      { name: "At Risk", value: Math.round((atRisk / total) * 100), color: "#ef4444" }
-    ]
+      {
+        name: "On Time",
+        value: Math.round((onTime / total) * 100),
+        color: "#10b981",
+      },
+      {
+        name: "Delayed",
+        value: Math.round((delayed / total) * 100),
+        color: "#3b82f6",
+      },
+      {
+        name: "At Risk",
+        value: Math.round((atRisk / total) * 100),
+        color: "#ef4444",
+      },
+    ],
   };
 }
 
@@ -236,5 +256,5 @@ module.exports = {
   getLivePositions,
   getDashboardStats,
   getPerformance,
-  getTripStatus
+  getTripStatus,
 };

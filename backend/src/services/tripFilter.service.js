@@ -1,7 +1,12 @@
 const prisma = require("../lib/prisma");
 const { buildDateFilter } = require("../helpers/dateFilter");
 
-async function getCascadeOptions({ dateType, dateValue, driverName, originName }) {
+async function getCascadeOptions({
+  dateType,
+  dateValue,
+  driverName,
+  originName,
+}) {
   const dateFilter = buildDateFilter(dateType, dateValue);
   const baseWhere = dateFilter;
 
@@ -12,20 +17,20 @@ async function getCascadeOptions({ dateType, dateValue, driverName, originName }
 
   if (dateType === "current") {
     drivers = await prisma.driver.findMany({
-      select: { id: true, name: true }
+      select: { id: true, name: true },
     });
   } else {
     const driverTrips = await prisma.trip.findMany({
       where: baseWhere,
       select: {
         driver: {
-          select: { id: true, name: true }
-        }
+          select: { id: true, name: true },
+        },
       },
-      distinct: ["driverId"]
+      distinct: ["driverId"],
     });
 
-    drivers = driverTrips.map(t => t.driver).filter(Boolean);
+    drivers = driverTrips.map((t) => t.driver).filter(Boolean);
   }
 
   // =====================
@@ -38,19 +43,19 @@ async function getCascadeOptions({ dateType, dateValue, driverName, originName }
 
     if (driverName && !driverName.startsWith("Select")) {
       const clean = driverName.split("(")[0].trim();
-      const driver = drivers.find(d => d.name === clean);
+      const driver = drivers.find((d) => d.name === clean);
       if (driver) originWhere.driverId = driver.id;
     }
 
     const originTrips = await prisma.trip.findMany({
       where: originWhere,
       select: {
-        origin: { select: { id: true, name: true, city: true } }
+        origin: { select: { id: true, name: true, city: true } },
       },
-      distinct: ["originId"]
+      distinct: ["originId"],
     });
 
-    origins = originTrips.map(t => t.origin).filter(Boolean);
+    origins = originTrips.map((t) => t.origin).filter(Boolean);
   }
 
   // =====================
@@ -63,14 +68,14 @@ async function getCascadeOptions({ dateType, dateValue, driverName, originName }
 
     if (driverName && !driverName.startsWith("Select")) {
       const clean = driverName.split("(")[0].trim();
-      const driver = drivers.find(d => d.name === clean);
+      const driver = drivers.find((d) => d.name === clean);
       if (driver) destWhere.driverId = driver.id;
     }
 
     if (originName && !originName.startsWith("Select")) {
       const clean = originName.split("(")[0].trim();
-      const origin = origins.find(o =>
-        o.name === clean || `${o.name} (${o.city})` === originName
+      const origin = origins.find(
+        (o) => o.name === clean || `${o.name} (${o.city})` === originName,
       );
       if (origin) destWhere.originId = origin.id;
     }
@@ -80,18 +85,18 @@ async function getCascadeOptions({ dateType, dateValue, driverName, originName }
     const destTrips = await prisma.trip.findMany({
       where: destWhere,
       select: {
-        destination: { select: { id: true, name: true, city: true } }
+        destination: { select: { id: true, name: true, city: true } },
       },
-      distinct: ["destinationId"]
+      distinct: ["destinationId"],
     });
 
-    destinations = destTrips.map(t => t.destination).filter(Boolean);
+    destinations = destTrips.map((t) => t.destination).filter(Boolean);
   }
 
   return {
     drivers,
     origins,
-    destinations
+    destinations,
   };
 }
 
@@ -99,13 +104,8 @@ async function getCascadeOptions({ dateType, dateValue, driverName, originName }
 // FILTER TRIPS
 // ==========================
 async function filterTrips(params) {
-  const {
-    dateType,
-    dateValue,
-    driverName,
-    originName,
-    destinationName
-  } = params;
+  const { dateType, dateValue, driverName, originName, destinationName } =
+    params;
 
   const dateFilter = buildDateFilter(dateType, dateValue);
   const where = { ...dateFilter };
@@ -129,33 +129,41 @@ async function filterTrips(params) {
     where,
     include: {
       driver: true,
-      vehicle: true,
+      vehicle: {
+        include: {
+          statuses: {
+            orderBy: { timestamp: "desc" },
+            take: 1,
+          },
+        },
+      },
       origin: true,
       destination: true,
       positions: {
         orderBy: { timestamp: "desc" },
-        take: 1
-      }
+        take: 1,
+      },
+      rfidEvents: {
+        orderBy: { timestamp: "desc" },
+        take: 10,
+      },
     },
-    orderBy: [
-      { status: "desc" },
-      { startTime: "desc" }
-    ]
+    orderBy: [{ status: "desc" }, { startTime: "desc" }],
   });
 
-  return trips.map(trip => {
+  return trips.map((trip) => {
     const latest = trip.positions?.[0];
     let speed = trip.avgSpeed ?? latest?.speed ?? 0;
 
     return {
       ...trip,
       latestPosition: latest,
-      displaySpeed: speed
+      displaySpeed: speed,
     };
   });
 }
 
 module.exports = {
   getCascadeOptions,
-  filterTrips
+  filterTrips,
 };

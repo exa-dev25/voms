@@ -1,12 +1,11 @@
 // frontend/components/FilterSection.tsx
 "use client";
 
-import { ReactNode, useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
 import { Filters } from "@/types";
 
 interface FilterSectionProps {
-  children: ReactNode;
   filters: Filters;
   onFilterChange: (filters: Filters) => void;
   onClear: () => void;
@@ -51,7 +50,7 @@ export default function FilterSection({
   const [searchDeparture, setSearchDeparture] = useState("");
 
   const [mode, setMode] = useState<"select" | "daily" | "weekly" | "monthly">(
-    "select"
+    "select",
   );
   const [selectedMonth, setSelectedMonth] = useState("");
   const [weekSearch, setWeekSearch] = useState("");
@@ -59,19 +58,18 @@ export default function FilterSection({
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fetchedRef = useRef(false);
 
-
   // Fetch cascade options
 
   const fetchCascadeOptions = async () => {
     // ⛔ STOP kalau session belum siap
     if (status !== "authenticated") return;
     if (!session?.accessToken) return;
-  
+
     try {
       setLoading(true);
-  
+
       const params = new URLSearchParams();
-  
+
       if (filters.dateType && filters.dateType !== "select") {
         params.append("dateType", filters.dateType);
       }
@@ -92,46 +90,46 @@ export default function FilterSection({
       ) {
         params.append("originName", filters.route.split("(")[0].trim());
       }
-  
+
       console.log("🔄 Fetching cascade options:", params.toString());
-  
+
       const res = await fetch(
         `${API_URL}/api/trips/filter/cascade-options?${params.toString()}`,
         {
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
-        }
+        },
       );
-  
+
       if (!res.ok) {
         console.warn("⚠️ Cascade options fetch failed:", res.status);
         return; // ⛔ JANGAN reset state
       }
-  
+
       const data = await res.json();
       if (!data.success) return;
-  
+
       const formattedDrivers = (data.drivers || []).map((d: any) => ({
         id: d.id,
         name: d.name,
         displayName: d.name,
       }));
-  
+
       const formattedOrigins = (data.origins || []).map((o: any) => ({
         id: o.id,
         name: o.name,
         city: o.city || "",
         displayName: `${o.name}${o.city ? ` (${o.city})` : ""}`,
       }));
-  
+
       const formattedDestinations = (data.destinations || []).map((d: any) => ({
         id: d.id,
         name: d.name,
         city: d.city || "",
         displayName: `${d.name}${d.city ? ` (${d.city})` : ""}`,
       }));
-  
+
       setFilterOptions({
         drivers: formattedDrivers,
         origins: formattedOrigins,
@@ -145,18 +143,17 @@ export default function FilterSection({
     }
   };
 
-
   // Fetch cascade options ketika filter berubah
   useEffect(() => {
     if (status !== "authenticated") return;
-  
+
     // ⛔ cegah double fetch pertama (StrictMode)
     if (!fetchedRef.current) {
       fetchedRef.current = true;
       fetchCascadeOptions();
       return;
     }
-  
+
     fetchCascadeOptions();
   }, [
     status,
@@ -166,7 +163,6 @@ export default function FilterSection({
     filters.route,
   ]);
 
-  
   // Handle click outside dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -231,7 +227,9 @@ export default function FilterSection({
       filtered = filtered.filter(
         (driver) =>
           driver.name.toLowerCase().includes(searchDriver.toLowerCase()) ||
-          driver.displayName?.toLowerCase().includes(searchDriver.toLowerCase())
+          driver.displayName
+            ?.toLowerCase()
+            .includes(searchDriver.toLowerCase()),
       );
     }
 
@@ -249,7 +247,7 @@ export default function FilterSection({
             ?.toLowerCase()
             .includes(searchRoute.toLowerCase()) ||
           (origin.city &&
-            origin.city.toLowerCase().includes(searchRoute.toLowerCase()))
+            origin.city.toLowerCase().includes(searchRoute.toLowerCase())),
       );
     }
 
@@ -271,7 +269,7 @@ export default function FilterSection({
           (destination.city &&
             destination.city
               .toLowerCase()
-              .includes(searchDeparture.toLowerCase()))
+              .includes(searchDeparture.toLowerCase())),
       );
     }
 
@@ -283,7 +281,7 @@ export default function FilterSection({
   const filteredDepartures = getFilteredDepartures();
 
   const weeks = ["Week 1", "Week 2", "Week 3", "Week 4", "Week 5"].filter(
-    (week) => week.toLowerCase().includes(weekSearch.toLowerCase())
+    (week) => week.toLowerCase().includes(weekSearch.toLowerCase()),
   );
 
   const getDateLabel = () => {
@@ -306,7 +304,7 @@ export default function FilterSection({
         const [year, month] = yearMonth.split("-");
         return `Week ${weekNum}, ${new Date(
           parseInt(year),
-          parseInt(month) - 1
+          parseInt(month) - 1,
         ).toLocaleDateString("id-ID", {
           month: "long",
           year: "numeric",
@@ -321,7 +319,7 @@ export default function FilterSection({
         {
           month: "long",
           year: "numeric",
-        }
+        },
       );
     }
     return "Select Date";
@@ -662,7 +660,7 @@ export default function FilterSection({
                               onClick={() => {
                                 handleChange(
                                   "dateValue",
-                                  `${selectedMonth} Week ${weekNum}`
+                                  `${selectedMonth} Week ${weekNum}`,
                                 );
                                 setMode("select");
                                 setOpenDate(false);
@@ -706,10 +704,10 @@ export default function FilterSection({
                 loading
                   ? "bg-[#1F2937] text-gray-500 cursor-wait border border-gray-600"
                   : !filters.dateType || filters.dateType === "select"
-                  ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
-                  : filterOptions.drivers.length === 0
-                  ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
-                  : "bg-[#161B22] text-gray-300 hover:bg-[#1F2937] border border-cyan-500/30 hover:border-cyan-500/50"
+                    ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
+                    : filterOptions.drivers.length === 0
+                      ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
+                      : "bg-[#161B22] text-gray-300 hover:bg-[#1F2937] border border-cyan-500/30 hover:border-cyan-500/50"
               }`}
               disabled={
                 loading ||
@@ -721,8 +719,8 @@ export default function FilterSection({
                 !filters.dateType || filters.dateType === "select"
                   ? "Select date first"
                   : filterOptions.drivers.length === 0
-                  ? "No drivers for selected date"
-                  : ""
+                    ? "No drivers for selected date"
+                    : ""
               }
             >
               <div className='flex items-center space-x-2 truncate'>
@@ -897,10 +895,10 @@ export default function FilterSection({
                 loading
                   ? "bg-[#1F2937] text-gray-500 cursor-wait border border-gray-600"
                   : !filters.driver
-                  ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
-                  : filterOptions.origins.length === 0
-                  ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
-                  : "bg-[#161B22] text-gray-300 hover:bg-[#1F2937] border border-cyan-500/30 hover:border-cyan-500/50"
+                    ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
+                    : filterOptions.origins.length === 0
+                      ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
+                      : "bg-[#161B22] text-gray-300 hover:bg-[#1F2937] border border-cyan-500/30 hover:border-cyan-500/50"
               }`}
               disabled={
                 loading || !filters.driver || filterOptions.origins.length === 0
@@ -909,8 +907,8 @@ export default function FilterSection({
                 !filters.driver
                   ? "Select driver first"
                   : filterOptions.origins.length === 0
-                  ? "No origins for selected driver"
-                  : ""
+                    ? "No origins for selected driver"
+                    : ""
               }
             >
               <div className='flex items-center space-x-2 truncate'>
@@ -1095,10 +1093,10 @@ export default function FilterSection({
                 loading
                   ? "bg-[#1F2937] text-gray-500 cursor-wait border border-gray-600"
                   : !filters.driver || !filters.route
-                  ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
-                  : filterOptions.destinations.length === 0
-                  ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
-                  : "bg-[#161B22] text-gray-300 hover:bg-[#1F2937] border border-cyan-500/30 hover:border-cyan-500/50"
+                    ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
+                    : filterOptions.destinations.length === 0
+                      ? "bg-[#1F2937] text-gray-500 cursor-not-allowed border border-gray-600"
+                      : "bg-[#161B22] text-gray-300 hover:bg-[#1F2937] border border-cyan-500/30 hover:border-cyan-500/50"
               }`}
               disabled={
                 loading ||
@@ -1110,10 +1108,10 @@ export default function FilterSection({
                 !filters.driver
                   ? "Select driver first"
                   : !filters.route
-                  ? "Select origin first"
-                  : filterOptions.destinations.length === 0
-                  ? "No departures for selected route"
-                  : ""
+                    ? "Select origin first"
+                    : filterOptions.destinations.length === 0
+                      ? "No departures for selected route"
+                      : ""
               }
             >
               <div className='flex items-center space-x-2 truncate'>
@@ -1223,7 +1221,7 @@ export default function FilterSection({
                         onClick={() =>
                           handleChange(
                             "departureRoute",
-                            formatDisplayName(destination)
+                            formatDisplayName(destination),
                           )
                         }
                         className={`w-full text-left px-3 py-2 text-sm transition flex items-center justify-between ${

@@ -10,10 +10,18 @@ exports.getVehicles = async (req, res) => {
 
 exports.createVehicle = async (req, res) => {
   try {
-    const { plate, type, deviceId } = req.body;
+    const { plate, type, deviceId, imei, serialNumber } = req.body;
     if (!plate) return res.status(400).json({ error: "Plate required" });
 
-    res.json(await vehicleService.createVehicle({ plate, type, deviceId }));
+    res.json(
+      await vehicleService.createVehicle({
+        plate,
+        type,
+        deviceId,
+        imei,
+        serialNumber,
+      }),
+    );
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

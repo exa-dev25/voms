@@ -1,15 +1,9 @@
-const service = require("../services/gps.service");
+const telemetryService = require("../services/telemetry.service");
 
 exports.pushGPS = async (req, res) => {
   try {
-    const position = await service.pushGPS({
-      vehicleId: parseInt(req.body.vehicleId),
-      latitude: req.body.latitude,
-      longitude: req.body.longitude,
-      speed: req.body.speed
-    });
-
-    res.json(position);
+    const result = await telemetryService.ingestTelemetry(req.body);
+    res.status(201).json({ success: true, ...result });
   } catch (err) {
     res.status(400).json({ error: err.message });
   }

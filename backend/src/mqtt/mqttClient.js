@@ -1,5 +1,12 @@
 const mqtt = require("mqtt");
-const prisma = require("../lib/prisma");
+const telemetryService = require("../services/telemetry.service");
+
+const TOPIC_MESSAGE_TYPES = {
+  "vehicle/heartbeat": "HEARTBEAT",
+  "vehicle/ignition": "IGNITION_START",
+  "vehicle/alert": "ALERT",
+  "vehicle/rfid": "RFID_EVENT",
+};
 
 function initMQTT() {
   if (!process.env.MQTT_BROKER_URL) {
@@ -13,7 +20,7 @@ function initMQTT() {
     console.log("✅ Connected to MQTT Broker");
     const topics = (process.env.MQTT_TOPICS || "")
       .split(",")
-      .map(t => t.trim())
+      .map((t) => t.trim())
       .filter(Boolean);
 
     if (topics.length) {
@@ -25,19 +32,7 @@ function initMQTT() {
     try {
       const data = JSON.parse(message.toString());
 
-      if (topic === "vehicle/position") {
-        const vehicleId = Number(data.vehicleId);
-        if (!vehicleId) return;
-
-        await prisma.position.create({
-          data: {
-            vehicleId,
-            latitude: Number(data.lat),
-            longitude: Number(data.lng),
-            speed: data.speed ? Number(data.speed) : null,
-          },
-        });
-      }
+      await telemetryService.ingestTelemetry(data, TOPIC_MESSAGE_TYPES[topic]);
     } catch (err) {
       console.error("MQTT error:", err);
     }
