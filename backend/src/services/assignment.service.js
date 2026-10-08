@@ -9,6 +9,12 @@ exports.createAssignment = (data) => {
       destinationId: data.destinationId,
       status: "PENDING",
     },
+    include: {
+      driver: true,
+      vehicle: true,
+      origin: true,
+      destination: true,
+    },
   });
 };
 

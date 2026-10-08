@@ -1,13 +1,20 @@
 const service = require("../services/assignment.service");
 
+const parseId = (value) => {
+  const id = Number(value);
+  return Number.isSafeInteger(id) && id > 0 ? id : null;
+};
+
 const createAssignment = async (req, res) => {
   try {
-    const driverId = parseInt(req.body.driverId);
-    const vehicleId = parseInt(req.body.vehicleId);
-    const originId = parseInt(req.body.originId);
-    const destinationId = parseInt(req.body.destinationId);
+    const driverId = parseId(req.body.driverId);
+    const vehicleId = parseId(req.body.vehicleId);
+    const originId = parseId(req.body.originId);
+    const destinationId = parseId(req.body.destinationId);
 
-    if ([driverId, vehicleId, originId, destinationId].some(isNaN)) {
+    if (
+      [driverId, vehicleId, originId, destinationId].some((id) => id === null)
+    ) {
       return res.status(400).json({ error: "Invalid assignment data" });
     }
 
@@ -15,10 +22,10 @@ const createAssignment = async (req, res) => {
       driverId,
       vehicleId,
       originId,
-      destinationId
+      destinationId,
     });
 
-    res.json(assignment);
+    res.status(201).json(assignment);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -34,5 +41,5 @@ const getAssignments = async (req, res) => {
 
 module.exports = {
   createAssignment,
-  getAssignments
+  getAssignments,
 };

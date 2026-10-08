@@ -1,5 +1,21 @@
 "use client";
 
+export interface ModalFormField {
+  name: string;
+  label: string;
+  type?: string;
+}
+
+export interface ModalFormProps {
+  open: boolean;
+  onClose: () => void;
+  title: string;
+  fields: ModalFormField[];
+  values: Record<string, any>;
+  setValues: (values: Record<string, any>) => void;
+  onSubmit: () => void;
+}
+
 export default function ModalForm({
   open,
   onClose,
@@ -8,7 +24,7 @@ export default function ModalForm({
   values,
   setValues,
   onSubmit,
-}) {
+}: ModalFormProps) {
   if (!open) return null;
 
   return (

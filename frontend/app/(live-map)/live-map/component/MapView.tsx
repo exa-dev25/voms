@@ -32,24 +32,29 @@ const Polyline = dynamic(
 // ============================
 // TYPES
 // ============================
-type VehicleStatus = "active" | "trip" | "alert" | "idle" | "off";
+export type VehicleStatus = "active" | "trip" | "alert" | "idle" | "off";
 
-interface Vehicle {
+export interface Vehicle {
   id: string;
-  name: string;
+  code?: string;
+  name?: string;
+  driver?: string;
   status: VehicleStatus;
-  lat: number;
-  lng: number;
+  lat?: number;
+  lng?: number;
+  position?: [number, number];
+  speed?: number;
 }
 
 interface MapViewProps {
+  vehicles?: Vehicle[];
   selectedVehicleId?: string | null;
 }
 
 // ============================
 // VEHICLE DATA
 // ============================
-const vehicles: Vehicle[] = [
+const defaultVehicles: Vehicle[] = [
   { id: "TRK-8821", name: "John Doe", status: "trip", lat: -6.21, lng: 106.82 },
   { id: "TRK-9900", name: "Mike R.", status: "alert", lat: -6.215, lng: 106.81 },
   { id: "FLT-2210", name: "Alex K.", status: "active", lat: -6.205, lng: 106.825 },
@@ -68,11 +73,16 @@ const statusColor: Record<VehicleStatus, string> = {
   off: "#9ca3af",    // gray
 };
 
-export default function MapView({ selectedVehicleId }: MapViewProps) {
+export default function MapView({ vehicles: propsVehicles, selectedVehicleId }: MapViewProps) {
   const mapRef = useRef<any>(null);
   const [mounted, setMounted] = useState(false);
   const [L, setL] = useState<any>(null);
   const [routePath, setRoutePath] = useState<[number, number][]>([]);
+
+  const activeVehicles = useMemo(() => {
+    if (propsVehicles && propsVehicles.length > 0) return propsVehicles;
+    return defaultVehicles;
+  }, [propsVehicles]);
 
   // ============================
   // CLIENT READY
@@ -89,16 +99,20 @@ export default function MapView({ selectedVehicleId }: MapViewProps) {
     if (!mounted) return;
 
     const fetchRoute = async () => {
-      const res = await fetch(
-        "https://router.project-osrm.org/route/v1/driving/106.82,-6.21;106.816,-6.595?overview=full&geometries=geojson"
-      );
-      const data = await res.json();
-
-      const coords = data.routes[0].geometry.coordinates.map(
-        ([lng, lat]: [number, number]) => [lat, lng]
-      );
-
-      setRoutePath(coords);
+      try {
+        const res = await fetch(
+          "https://router.project-osrm.org/route/v1/driving/106.82,-6.21;106.816,-6.595?overview=full&geometries=geojson"
+        );
+        const data = await res.json();
+        if (data?.routes?.[0]?.geometry?.coordinates) {
+          const coords = data.routes[0].geometry.coordinates.map(
+            ([lng, lat]: [number, number]) => [lat, lng]
+          );
+          setRoutePath(coords);
+        }
+      } catch (e) {
+        // Fallback or ignore network error gracefully
+      }
     };
 
     fetchRoute();
@@ -110,13 +124,18 @@ export default function MapView({ selectedVehicleId }: MapViewProps) {
   useEffect(() => {
     if (!mapRef.current || !selectedVehicleId) return;
 
-    const vehicle = vehicles.find((v) => v.id === selectedVehicleId);
+    const vehicle = activeVehicles.find((v) => v.id === selectedVehicleId || v.code === selectedVehicleId);
     if (!vehicle) return;
 
-    mapRef.current.flyTo([vehicle.lat, vehicle.lng], 15, {
-      duration: 1.2,
-    });
-  }, [selectedVehicleId]);
+    const lat = vehicle.lat ?? vehicle.position?.[0];
+    const lng = vehicle.lng ?? vehicle.position?.[1];
+
+    if (lat !== undefined && lng !== undefined) {
+      mapRef.current.flyTo([lat, lng], 15, {
+        duration: 1.2,
+      });
+    }
+  }, [selectedVehicleId, activeVehicles]);
 
   // ============================
   // ICONS (IDLE & OFF FIXED)
@@ -175,17 +194,24 @@ export default function MapView({ selectedVehicleId }: MapViewProps) {
         )}
 
         {/* MARKERS */}
-        {vehicles.map((v) => (
-          <Marker
-            key={v.id}
-            position={[v.lat, v.lng]}
-            icon={icons[v.status]}
-          >
-            <Popup closeButton={false}>
-              <VehiclePopup />
-            </Popup>
-          </Marker>
-        ))}
+        {activeVehicles.map((v) => {
+          const lat = v.lat ?? v.position?.[0];
+          const lng = v.lng ?? v.position?.[1];
+
+          if (lat === undefined || lng === undefined) return null;
+
+          return (
+            <Marker
+              key={v.id}
+              position={[lat, lng]}
+              icon={icons[v.status] || icons.active}
+            >
+              <Popup closeButton={false}>
+                <VehiclePopup />
+              </Popup>
+            </Marker>
+          );
+        })}
       </MapContainer>
     </div>
   );

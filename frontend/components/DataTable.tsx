@@ -63,7 +63,12 @@ export default function DataTable({ filters }: Props) {
             : {},
         });
 
-        if (!res.ok) throw new Error(`Failed to fetch trips: ${res.status}`);
+        if (!res.ok) {
+          console.error(`Failed to fetch trips: ${res.status}`);
+          setTrips([]);
+          setTotal(0);
+          return;
+        }
 
         const data = await res.json();
 

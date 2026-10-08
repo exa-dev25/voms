@@ -58,11 +58,15 @@ const VEHICLES: VehicleItem[] = [
 ];
 
 type Props = {
+  vehicles?: any[];
+  selectedVehicleId?: string | null;
   onSelectVehicle: (code: string) => void;
-  onFilterChange?: (vehicles: VehicleItem[]) => void; // ✅ OPTIONAL (AMAN)
+  onFilterChange?: (vehicles: VehicleItem[]) => void;
 };
 
 export default function VehiclePanel({
+  vehicles: propsVehicles,
+  selectedVehicleId,
   onSelectVehicle,
   onFilterChange,
 }: Props) {
