@@ -17,6 +17,9 @@ exports.createDriver = async (req, res) => {
     const driver = await driverService.createDriver({ name, phone });
     res.json(driver);
   } catch (err) {
+    if (err.code === "P2002") {
+      return res.status(409).json({ error: "Driver name already exists" });
+    }
     res.status(500).json({ error: err.message });
   }
 };

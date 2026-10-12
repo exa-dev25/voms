@@ -2,7 +2,7 @@ const prisma = require("../lib/prisma");
 
 exports.startTrip = async (assignmentId) => {
   const assignment = await prisma.assignment.findUnique({
-    where: { id: assignmentId }
+    where: { id: assignmentId },
   });
 
   if (!assignment || assignment.status !== "PENDING") {
@@ -19,21 +19,45 @@ exports.startTrip = async (assignmentId) => {
       vehicleId: assignment.vehicleId,
       originId: assignment.originId,
       destinationId: assignment.destinationId,
-      status: "ON_TRIP"
-    }
+      status: "ON_TRIP",
+    },
   });
 
   await prisma.assignment.update({
     where: { id: assignment.id },
-    data: { status: "STARTED", startedAt: new Date() }
+    data: { status: "STARTED", startedAt: new Date() },
   });
 
   return trip;
 };
 
+exports.updateTripDriver = async (tripId, driverId) => {
+  const [trip, driver] = await Promise.all([
+    prisma.trip.findUnique({ where: { id: tripId } }),
+    prisma.driver.findUnique({ where: { id: driverId } }),
+  ]);
+
+  if (!trip) throw new Error("Trip not found");
+  if (!driver) throw new Error("Driver not found");
+
+  const [, updatedTrip] = await prisma.$transaction([
+    prisma.assignment.update({
+      where: { id: trip.assignmentId },
+      data: { driverId },
+    }),
+    prisma.trip.update({
+      where: { id: tripId },
+      data: { driverId },
+      include: { driver: true },
+    }),
+  ]);
+
+  return updatedTrip;
+};
+
 exports.endTrip = async ({ tripId, destinationId, avgSpeed }) => {
   const trip = await prisma.trip.findUnique({
-    where: { id: tripId }
+    where: { id: tripId },
   });
 
   if (!trip || trip.status !== "ON_TRIP") {
@@ -46,12 +70,12 @@ exports.endTrip = async ({ tripId, destinationId, avgSpeed }) => {
       status: "COMPLETED",
       endTime: new Date(),
       destinationId,
-      avgSpeed
-    }
+      avgSpeed,
+    },
   });
 
   await prisma.assignment.update({
     where: { id: trip.assignmentId },
-    data: { status: "PENDING", startedAt: null }
+    data: { status: "PENDING", startedAt: null },
   });
 };

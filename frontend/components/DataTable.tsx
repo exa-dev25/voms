@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { Trip, Filters } from "@/types";
-import { Eye, X } from "lucide-react";
+import { Eye, UserRound, X } from "lucide-react";
 import * as XLSX from "xlsx";
 
 interface Props {
@@ -12,6 +12,11 @@ interface Props {
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+
+interface DriverOption {
+  id: number;
+  name: string;
+}
 
 export default function DataTable({ filters }: Props) {
   const { data: session } = useSession();
@@ -21,7 +26,19 @@ export default function DataTable({ filters }: Props) {
   const [total, setTotal] = useState(0);
   const [exporting, setExporting] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<Trip | null>(null);
+  const [driverOptions, setDriverOptions] = useState<DriverOption[]>([]);
+  const [loadingDrivers, setLoadingDrivers] = useState(false);
+  const [driverLoadError, setDriverLoadError] = useState<string | null>(null);
+  const [assigningTrip, setAssigningTrip] = useState<Trip | null>(null);
+  const [selectedDriverId, setSelectedDriverId] = useState("");
+  const [savingDriver, setSavingDriver] = useState(false);
+  const [assignmentError, setAssignmentError] = useState<string | null>(null);
   const limit = 5;
+
+  const closeDriverAssignment = () => {
+    setAssigningTrip(null);
+    setSelectedTrip(null);
+  };
 
   useEffect(() => {
     const fetchTrips = async () => {
@@ -98,6 +115,92 @@ export default function DataTable({ filters }: Props) {
 
     fetchTrips();
   }, [filters, session?.accessToken]);
+
+  useEffect(() => {
+    if (!session?.accessToken) return;
+
+    const fetchDrivers = async () => {
+      setLoadingDrivers(true);
+      try {
+        const response = await fetch(`${API_URL}/api/drivers`, {
+          headers: { Authorization: `Bearer ${session.accessToken}` },
+        });
+        if (!response.ok) throw new Error("Gagal memuat daftar driver.");
+        setDriverOptions((await response.json()) as DriverOption[]);
+      } catch (error) {
+        setDriverLoadError(
+          error instanceof Error
+            ? error.message
+            : "Gagal memuat daftar driver.",
+        );
+      } finally {
+        setLoadingDrivers(false);
+      }
+    };
+
+    void fetchDrivers();
+  }, [session?.accessToken]);
+
+  const handleSaveDriver = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!assigningTrip || !selectedDriverId || !session?.accessToken) return;
+
+    setSavingDriver(true);
+    setAssignmentError(null);
+
+    try {
+      const response = await fetch(
+        `${API_URL}/api/trips/${assigningTrip.id}/driver`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${session.accessToken}`,
+          },
+          body: JSON.stringify({ driverId: Number(selectedDriverId) }),
+        },
+      );
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || "Gagal memperbarui driver trip.");
+      }
+
+      const driver = driverOptions.find(
+        (option) => option.id === Number(selectedDriverId),
+      );
+      if (!driver) throw new Error("Driver yang dipilih tidak ditemukan.");
+
+      setTrips((currentTrips) =>
+        currentTrips.map((trip) =>
+          trip.id === assigningTrip.id
+            ? {
+                ...trip,
+                driverId: driver.id,
+                driver: { ...trip.driver, ...driver },
+              }
+            : trip,
+        ),
+      );
+      setSelectedTrip((currentTrip) =>
+        currentTrip?.id === assigningTrip.id
+          ? {
+              ...currentTrip,
+              driverId: driver.id,
+              driver: { ...currentTrip.driver, ...driver },
+            }
+          : currentTrip,
+      );
+      closeDriverAssignment();
+    } catch (error) {
+      setAssignmentError(
+        error instanceof Error
+          ? error.message
+          : "Gagal memperbarui driver trip.",
+      );
+    } finally {
+      setSavingDriver(false);
+    }
+  };
 
   useEffect(() => {
     setPage(1);
@@ -378,13 +481,13 @@ export default function DataTable({ filters }: Props) {
                 "End Time",
                 "Speed",
                 "Last Update",
-                "",
+                "Actions",
               ].map((h, index) => (
                 <th
                   key={h}
                   className='px-6 py-4 text-left text-xs font-bold text-cyan-400 uppercase tracking-wider'
                 >
-                  {index === 8 ? <span className='sr-only'>Actions</span> : h}
+                  {h}
                 </th>
               ))}
             </tr>
@@ -638,18 +741,34 @@ export default function DataTable({ filters }: Props) {
                       </div>
                     </td>
 
-                    <td className='px-4 py-4 text-right'>
-                      <button
-                        type='button'
-                        onClick={() => setSelectedTrip(trip)}
-                        aria-label={`View details for ${trip.driver?.name || "driver"}`}
-                        title='View trip and driver details'
-                        className='inline-flex items-center gap-2 rounded-md border border-white/15 px-3 py-2 text-sm text-gray-200 transition hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:text-white'
-                      >
-                        <Eye className='h-4 w-4' aria-hidden='true' />
-                        <span>Details</span>
-                      </button>
-                    </td>
+                    <td className="px-4 py-4 text-right">
+  <div className="flex items-center justify-end gap-2">
+    <button
+      type="button"
+      onClick={() => {
+        setAssignmentError(null);
+        setSelectedDriverId(String(trip.driverId));
+        setSelectedTrip(trip);
+        setAssigningTrip(trip);
+      }}
+      aria-label={`Assign driver to trip ${trip.id}`}
+      title="Assign or change driver"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-cyan-400/30 text-cyan-200 transition hover:bg-cyan-400/10 hover:text-cyan-100"
+    >
+      <UserRound className="h-4 w-4" aria-hidden="true" />
+    </button>
+
+    <button
+      type="button"
+      onClick={() => setSelectedTrip(trip)}
+      aria-label={`View details for ${trip.driver?.name || "driver"}`}
+      title="View trip and driver details"
+      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-gray-200 transition hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:text-white"
+    >
+      <Eye className="h-4 w-4" aria-hidden="true" />
+    </button>
+  </div>
+</td>
                   </tr>
                 );
               })
@@ -708,9 +827,115 @@ export default function DataTable({ filters }: Props) {
           >
             <div className='mb-6 flex items-start justify-between gap-4'>
               <div>
-                <p className='text-xs font-semibold uppercase tracking-wider text-cyan-400'>
+                <div className='text-xs font-semibold uppercase tracking-wider text-cyan-400'>
+                  {assigningTrip && (
+                    <div
+                      className='fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4'
+                      onClick={closeDriverAssignment}
+                    >
+                      <section
+                        role='dialog'
+                        aria-modal='true'
+                        aria-labelledby='assign-driver-title'
+                        onClick={(event) => event.stopPropagation()}
+                        className='w-full max-w-md rounded-lg border border-white/10 bg-[#0D1117] p-5 shadow-2xl'
+                      >
+                        <div className='mb-5 flex items-start justify-between gap-4'>
+                          <div>
+                            <p className='text-xs font-semibold uppercase tracking-wider text-cyan-400'>
+                              Trip #{assigningTrip.id}
+                            </p>
+                            <h2
+                              id='assign-driver-title'
+                              className='mt-1 text-lg font-semibold text-white'
+                            >
+                              Assign / Change Driver
+                            </h2>
+                            <p className='mt-1 text-sm text-gray-400'>
+                              {assigningTrip.vehicle?.plate ||
+                                "Unknown vehicle"}{" "}
+                              · {assigningTrip.origin?.name || "—"} →{" "}
+                              {assigningTrip.destination?.name || "—"}
+                            </p>
+                          </div>
+                          <button
+                            type='button'
+                            onClick={closeDriverAssignment}
+                            aria-label='Close driver assignment'
+                            className='rounded-md p-2 text-gray-400 transition hover:bg-white/10 hover:text-white'
+                          >
+                            <X className='h-4 w-4' aria-hidden='true' />
+                          </button>
+                        </div>
+
+                        <form onSubmit={handleSaveDriver} className='space-y-4'>
+                          <label
+                            htmlFor='trip-driver'
+                            className='block text-sm text-gray-300'
+                          >
+                            Driver
+                          </label>
+                          <select
+                            id='trip-driver'
+                            required
+                            value={selectedDriverId}
+                            onChange={(event) =>
+                              setSelectedDriverId(event.target.value)
+                            }
+                            disabled={
+                              loadingDrivers || driverOptions.length === 0
+                            }
+                            className='-mt-2 w-full rounded-md border border-white/15 bg-[#111820] px-3 py-2.5 text-white outline-none focus:border-cyan-400 disabled:opacity-60'
+                          >
+                            <option value='' disabled>
+                              {loadingDrivers
+                                ? "Memuat driver..."
+                                : "Pilih driver"}
+                            </option>
+                            {driverOptions.map((driver) => (
+                              <option key={driver.id} value={driver.id}>
+                                {driver.name}
+                              </option>
+                            ))}
+                          </select>
+                          {assignmentError && (
+                            <p role='alert' className='text-sm text-red-300'>
+                              {assignmentError}
+                            </p>
+                          )}
+                          {driverLoadError && (
+                            <p role='alert' className='text-sm text-red-300'>
+                              {driverLoadError}
+                            </p>
+                          )}
+                          <div className='flex justify-end gap-2 pt-1'>
+                            <button
+                              type='button'
+                              onClick={closeDriverAssignment}
+                              className='rounded-md border border-white/15 px-4 py-2 text-sm text-gray-300 transition hover:bg-white/5'
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              type='submit'
+                              disabled={
+                                savingDriver ||
+                                loadingDrivers ||
+                                !selectedDriverId ||
+                                Number(selectedDriverId) ===
+                                  assigningTrip.driverId
+                              }
+                              className='rounded-md bg-cyan-500 px-4 py-2 text-sm font-semibold text-[#071116] transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50'
+                            >
+                              {savingDriver ? "Saving..." : "Save Driver"}
+                            </button>
+                          </div>
+                        </form>
+                      </section>
+                    </div>
+                  )}
                   Trip details
-                </p>
+                </div>
                 <h2
                   id='trip-detail-title'
                   className='mt-1 text-xl font-semibold text-white'
