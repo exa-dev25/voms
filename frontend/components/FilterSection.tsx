@@ -57,7 +57,6 @@ export default function FilterSection({
 
   const dropdownRef = useRef<HTMLDivElement>(null);
   const fetchedRef = useRef(false);
-
   // Fetch cascade options
 
   const fetchCascadeOptions = async () => {

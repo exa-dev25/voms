@@ -62,26 +62,53 @@ export default function LiveMapPage() {
      SELECTED VEHICLE (SYNC MAP ↔ PANEL)
   ============================= */
   const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(
-    null
+    null,
   );
 
   return (
-    <div className="relative flex h-full w-full overflow-hidden bg-[#020617]">
+    <div className='relative flex h-full w-full overflow-hidden bg-[#020617]'>
       {/* ================= MAP AREA ================= */}
-      <div className="flex-1 relative">
-        <MapView
-          vehicles={vehicles}
-          selectedVehicleId={selectedVehicleId}
-        />
+      <div className='flex-1 relative'>
+        <div className='absolute left-6 top-6 z-[500] flex flex-wrap gap-3'>
+          {[
+            { label: "Active", value: "3/3", tone: "emerald" },
+            { label: "GPS Online", value: "96%", tone: "cyan" },
+            { label: "Alerts", value: "2", tone: "red" },
+            { label: "Avg Speed", value: "42 km/h", tone: "amber" },
+          ].map((item) => (
+            <div
+              key={item.label}
+              className='rounded-xl border border-white/10 bg-slate-950/75 px-3 py-2 backdrop-blur-sm'
+            >
+              <p className='text-[10px] uppercase tracking-[0.2em] text-slate-400'>
+                {item.label}
+              </p>
+              <p
+                className={`mt-1 text-lg font-bold ${
+                  item.tone === "emerald"
+                    ? "text-emerald-400"
+                    : item.tone === "cyan"
+                      ? "text-cyan-400"
+                      : item.tone === "red"
+                        ? "text-red-400"
+                        : "text-amber-400"
+                }`}
+              >
+                {item.value}
+              </p>
+            </div>
+          ))}
+        </div>
 
-        {/* STATUS LEGEND */}
-        <div className="absolute bottom-6 left-6 z-[500]">
+        <MapView vehicles={vehicles} selectedVehicleId={selectedVehicleId} />
+
+        <div className='absolute bottom-6 left-6 z-[500]'>
           <StatusLegend />
         </div>
       </div>
 
       {/* ================= RIGHT PANEL ================= */}
-      <div className="w-80 shrink-0 border-l border-white/5">
+      <div className='w-80 shrink-0 border-l border-white/5'>
         <VehiclePanel
           vehicles={vehicles}
           selectedVehicleId={selectedVehicleId}

@@ -84,7 +84,6 @@ export default function ProfilePage() {
     SUPERADMIN: "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
   };
 
-  // Fetch profile
   useEffect(() => {
     fetchProfile();
   }, [session?.accessToken]);
@@ -247,60 +246,61 @@ export default function ProfilePage() {
 
   return (
     <ProtectedPage>
-      <main className="min-h-screen bg-[#0b1220] text-gray-200 p-6">
-        <div className="max-w-4xl mx-auto">
+      <main className='min-h-screen bg-[#0b1220] text-gray-200 p-6'>
+        <div className='max-w-4xl mx-auto'>
           {/* HEADER */}
-          <h1 className="text-xl font-semibold text-cyan-400 mb-6">
+          <h1 className='text-xl font-semibold text-cyan-400 mb-6'>
             My Profile
           </h1>
 
           {error && (
-            <p className="mb-4 text-red-400 bg-red-400/10 border border-red-400/20 px-3 py-2 rounded text-sm">
+            <p className='mb-4 text-red-400 bg-red-400/10 border border-red-400/20 px-3 py-2 rounded text-sm'>
               {error}
             </p>
           )}
           {success && (
-            <p className="mb-4 text-green-400 bg-green-400/10 border border-green-400/20 px-3 py-2 rounded text-sm">
+            <p className='mb-4 text-green-400 bg-green-400/10 border border-green-400/20 px-3 py-2 rounded text-sm'>
               {success}
             </p>
           )}
 
           {/* PROFILE CARD */}
-          <div className="bg-[#0f1729] border border-cyan-400/30 rounded-lg p-6 mb-6">
-            <div className="flex items-center gap-4">
+          <div className='bg-[#0f1729] border border-cyan-400/30 rounded-lg p-6 mb-6'>
+            <div className='flex items-center gap-4'>
               {profile?.profileImage ? (
                 <img
                   src={profile.profileImage}
-                  className="w-20 h-20 rounded-full object-cover border border-cyan-400/40"
+                  className='w-20 h-20 rounded-full object-cover border border-cyan-400/40'
                 />
               ) : (
-                <div className="w-20 h-20 rounded-full bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-2xl font-bold text-cyan-300">
+                <div className='w-20 h-20 rounded-full bg-cyan-500/20 border border-cyan-400/30 flex items-center justify-center text-2xl font-bold text-cyan-300'>
                   {getInitials(profile?.name || "")}
                 </div>
               )}
 
               <div>
-                <p className="text-lg font-semibold">{profile?.name}</p>
-                <p className="text-sm text-gray-400">{profile?.email}</p>
+                <p className='text-lg font-semibold'>{profile?.name}</p>
+                <p className='text-sm text-gray-400'>{profile?.email}</p>
                 <span
-                  className={`inline-block mt-2 px-2 py-1 rounded text-xs border ${profile ? roleColors[profile.role] : ""
-                    }`}
+                  className={`inline-block mt-2 px-2 py-1 rounded text-xs border ${
+                    profile ? roleColors[profile.role] : ""
+                  }`}
                 >
                   {profile?.role}
                 </span>
               </div>
             </div>
 
-            <div className="mt-6">
+            <div className='mt-6'>
               {!isEditingProfile ? (
                 <button
                   onClick={() => setIsEditingProfile(true)}
-                  className="px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded border border-cyan-400/30 text-sm"
+                  className='px-4 py-2 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded border border-cyan-400/30 text-sm'
                 >
                   Edit Profile
                 </button>
               ) : (
-                <div className="flex gap-3">
+                <div className='flex gap-3'>
                   <button
                     onClick={() => {
                       setIsEditingProfile(false);
@@ -311,14 +311,14 @@ export default function ProfilePage() {
                         profileImage: profile?.profileImage || "",
                       });
                     }}
-                    className="px-4 py-2 bg-gray-700 text-gray-300 rounded text-sm border border-gray-500"
+                    className='px-4 py-2 bg-gray-700 text-gray-300 rounded text-sm border border-gray-500'
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleUpdateProfile}
                     disabled={saving}
-                    className="px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-sm shadow disabled:opacity-50"
+                    className='px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-sm shadow disabled:opacity-50'
                   >
                     {saving ? "Saving..." : "Save Changes"}
                   </button>
@@ -327,10 +327,10 @@ export default function ProfilePage() {
             </div>
 
             {isEditingProfile && (
-              <div className="mt-6 space-y-4">
+              <div className='mt-6 space-y-4'>
                 {/* Name */}
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">
+                  <label className='block text-xs text-gray-400 mb-1'>
                     Full Name
                   </label>
                   <input
@@ -338,13 +338,13 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setProfileForm({ ...profileForm, name: e.target.value })
                     }
-                    className="w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 rounded text-sm"
+                    className='w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 rounded text-sm'
                   />
                 </div>
 
                 {/* Email */}
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">
+                  <label className='block text-xs text-gray-400 mb-1'>
                     Email
                   </label>
                   <input
@@ -352,13 +352,13 @@ export default function ProfilePage() {
                     onChange={(e) =>
                       setProfileForm({ ...profileForm, email: e.target.value })
                     }
-                    className="w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 rounded text-sm"
+                    className='w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 rounded text-sm'
                   />
                 </div>
 
                 {/* Job Role */}
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">
+                  <label className='block text-xs text-gray-400 mb-1'>
                     Job Role
                   </label>
                   <input
@@ -369,7 +369,7 @@ export default function ProfilePage() {
                         jobRole: e.target.value,
                       })
                     }
-                    className="w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 rounded text-sm"
+                    className='w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 rounded text-sm'
                   />
                 </div>
               </div>
@@ -377,11 +377,11 @@ export default function ProfilePage() {
           </div>
 
           {/* SECURITY CARD */}
-          <div className="bg-[#0f1729] border border-cyan-400/30 rounded-lg">
-            <div className="px-4 py-3 border-b border-cyan-400/20 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Lock className="w-4 h-4 text-cyan-400" />
-                <h2 className="text-sm font-semibold text-cyan-400">
+          <div className='bg-[#0f1729] border border-cyan-400/30 rounded-lg'>
+            <div className='px-4 py-3 border-b border-cyan-400/20 flex items-center justify-between'>
+              <div className='flex items-center gap-2'>
+                <Lock className='w-4 h-4 text-cyan-400' />
+                <h2 className='text-sm font-semibold text-cyan-400'>
                   Security
                 </h2>
               </div>
@@ -389,12 +389,12 @@ export default function ProfilePage() {
               {!isChangingPassword ? (
                 <button
                   onClick={() => setIsChangingPassword(true)}
-                  className="px-3 py-1.5 bg-cyan-500/20 text-cyan-400 border border-cyan-400/30 rounded text-xs"
+                  className='px-3 py-1.5 bg-cyan-500/20 text-cyan-400 border border-cyan-400/30 rounded text-xs'
                 >
                   Change Password
                 </button>
               ) : (
-                <div className="flex gap-2">
+                <div className='flex gap-2'>
                   <button
                     onClick={() => {
                       setIsChangingPassword(false);
@@ -405,7 +405,7 @@ export default function ProfilePage() {
                       });
                       setError("");
                     }}
-                    className="px-3 py-1.5 bg-[#1a2235] text-gray-300 border border-cyan-400/20 rounded text-xs"
+                    className='px-3 py-1.5 bg-[#1a2235] text-gray-300 border border-cyan-400/20 rounded text-xs'
                   >
                     Cancel
                   </button>
@@ -413,7 +413,7 @@ export default function ProfilePage() {
                   <button
                     onClick={handleChangePassword}
                     disabled={saving}
-                    className="px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-xs"
+                    className='px-3 py-1.5 bg-cyan-500 hover:bg-cyan-600 text-white rounded text-xs'
                   >
                     {saving ? "Saving..." : "Update Password"}
                   </button>
@@ -421,29 +421,29 @@ export default function ProfilePage() {
               )}
             </div>
 
-            <div className="p-6">
+            <div className='p-6'>
               {!isChangingPassword ? (
-                <div className="text-center py-8">
-                  <Lock className="w-12 h-12 text-gray-600 mx-auto mb-3" />
-                  <p className="text-gray-400 text-sm">
+                <div className='text-center py-8'>
+                  <Lock className='w-12 h-12 text-gray-600 mx-auto mb-3' />
+                  <p className='text-gray-400 text-sm'>
                     Keep your account secure by updating your password
                     regularly.
                   </p>
-                  <p className="text-xs text-gray-500 mt-2">
+                  <p className='text-xs text-gray-500 mt-2'>
                     Last changed:{" "}
                     {formatDate(
-                      profile?.updatedAt || profile?.createdAt || null
+                      profile?.updatedAt || profile?.createdAt || null,
                     )}
                   </p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className='space-y-4'>
                   {/* CURRENT PASSWORD */}
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">
+                    <label className='block text-xs text-gray-400 mb-1'>
                       Current Password
                     </label>
-                    <div className="relative">
+                    <div className='relative'>
                       <input
                         type={showCurrentPassword ? "text" : "password"}
                         value={passwordForm.currentPassword}
@@ -453,19 +453,19 @@ export default function ProfilePage() {
                             currentPassword: e.target.value,
                           })
                         }
-                        className="w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 pr-10 rounded text-sm"
+                        className='w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 pr-10 rounded text-sm'
                       />
                       <button
-                        type="button"
+                        type='button'
                         onClick={() =>
                           setShowCurrentPassword(!showCurrentPassword)
                         }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500'
                       >
                         {showCurrentPassword ? (
-                          <EyeOff className="w-4 h-4" />
+                          <EyeOff className='w-4 h-4' />
                         ) : (
-                          <Eye className="w-4 h-4" />
+                          <Eye className='w-4 h-4' />
                         )}
                       </button>
                     </div>
@@ -473,10 +473,10 @@ export default function ProfilePage() {
 
                   {/* NEW PASSWORD */}
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">
+                    <label className='block text-xs text-gray-400 mb-1'>
                       New Password
                     </label>
-                    <div className="relative">
+                    <div className='relative'>
                       <input
                         type={showNewPassword ? "text" : "password"}
                         value={passwordForm.newPassword}
@@ -486,26 +486,24 @@ export default function ProfilePage() {
                             newPassword: e.target.value,
                           })
                         }
-                        className="w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 pr-10 rounded text-sm"
+                        className='w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 pr-10 rounded text-sm'
                       />
                       <button
-                        type="button"
-                        onClick={() =>
-                          setShowNewPassword(!showNewPassword)
-                        }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        type='button'
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                        className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500'
                       >
                         {showNewPassword ? (
-                          <EyeOff className="w-4 h-4" />
+                          <EyeOff className='w-4 h-4' />
                         ) : (
-                          <Eye className="w-4 h-4" />
+                          <Eye className='w-4 h-4' />
                         )}
                       </button>
                     </div>
 
                     {passwordForm.newPassword &&
                       passwordForm.newPassword.length < 8 && (
-                        <p className="text-red-400 text-xs mt-1">
+                        <p className='text-red-400 text-xs mt-1'>
                           Password must be at least 8 characters
                         </p>
                       )}
@@ -513,10 +511,10 @@ export default function ProfilePage() {
 
                   {/* CONFIRM PASSWORD */}
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">
+                    <label className='block text-xs text-gray-400 mb-1'>
                       Confirm New Password
                     </label>
-                    <div className="relative">
+                    <div className='relative'>
                       <input
                         type={showConfirmPassword ? "text" : "password"}
                         value={passwordForm.confirmPassword}
@@ -526,19 +524,19 @@ export default function ProfilePage() {
                             confirmPassword: e.target.value,
                           })
                         }
-                        className="w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 pr-10 rounded text-sm"
+                        className='w-full bg-[#1a2235] border border-cyan-400/20 px-3 py-2 pr-10 rounded text-sm'
                       />
                       <button
-                        type="button"
+                        type='button'
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500"
+                        className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500'
                       >
                         {showConfirmPassword ? (
-                          <EyeOff className="w-4 h-4" />
+                          <EyeOff className='w-4 h-4' />
                         ) : (
-                          <Eye className="w-4 h-4" />
+                          <Eye className='w-4 h-4' />
                         )}
                       </button>
                     </div>
@@ -546,19 +544,19 @@ export default function ProfilePage() {
                     {passwordForm.newPassword !==
                       passwordForm.confirmPassword &&
                       passwordForm.confirmPassword && (
-                        <p className="text-red-400 text-xs mt-1">
+                        <p className='text-red-400 text-xs mt-1'>
                           Passwords do not match
                         </p>
                       )}
                   </div>
 
                   {/* REQUIREMENT INDICATOR */}
-                  <div className="bg-[#1a2235] border border-cyan-400/10 rounded p-3">
-                    <p className="text-xs text-gray-400 mb-1">
+                  <div className='bg-[#1a2235] border border-cyan-400/10 rounded p-3'>
+                    <p className='text-xs text-gray-400 mb-1'>
                       Password Requirements:
                     </p>
-                    <ul className="text-xs text-gray-500 space-y-1">
-                      <li className="flex items-center gap-2">
+                    <ul className='text-xs text-gray-500 space-y-1'>
+                      <li className='flex items-center gap-2'>
                         <div
                           className={`w-1.5 h-1.5 rounded-full ${
                             passwordForm.newPassword.length >= 8
@@ -569,7 +567,7 @@ export default function ProfilePage() {
                         Minimum 8 characters
                       </li>
 
-                      <li className="flex items-center gap-2">
+                      <li className='flex items-center gap-2'>
                         <div
                           className={`w-1.5 h-1.5 rounded-full ${
                             passwordForm.newPassword ===
@@ -589,40 +587,40 @@ export default function ProfilePage() {
           </div>
 
           {/* ACCOUNT INFO */}
-          <div className="bg-[#0f1729] border border-cyan-400/30 rounded-lg p-6 mt-6">
-            <h3 className="text-sm text-cyan-400 mb-4 font-semibold">
+          <div className='bg-[#0f1729] border border-cyan-400/30 rounded-lg p-6 mt-6'>
+            <h3 className='text-sm text-cyan-400 mb-4 font-semibold'>
               Account Information
             </h3>
 
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className='grid grid-cols-2 gap-4 text-sm'>
               <div>
-                <p className="text-gray-500 text-xs mb-1">Account ID</p>
-                <p className="text-gray-300 font-mono text-xs">{profile?.id}</p>
+                <p className='text-gray-500 text-xs mb-1'>Account ID</p>
+                <p className='text-gray-300 font-mono text-xs'>{profile?.id}</p>
               </div>
 
               <div>
-                <p className="text-gray-500 text-xs mb-1">Member Since</p>
-                <p className="text-gray-300">
+                <p className='text-gray-500 text-xs mb-1'>Member Since</p>
+                <p className='text-gray-300'>
                   {formatDate(profile?.createdAt || null)}
                 </p>
               </div>
 
               <div>
-                <p className="text-gray-500 text-xs mb-1">Last Updated</p>
-                <p className="text-gray-300">
+                <p className='text-gray-500 text-xs mb-1'>Last Updated</p>
+                <p className='text-gray-300'>
                   {formatDate(profile?.updatedAt || profile?.createdAt || null)}
                 </p>
               </div>
 
               <div>
-                <p className="text-gray-500 text-xs mb-1">Access Level</p>
-                <p className="text-gray-300">{profile?.role}</p>
+                <p className='text-gray-500 text-xs mb-1'>Access Level</p>
+                <p className='text-gray-300'>{profile?.role}</p>
               </div>
             </div>
           </div>
 
           {/* FOOTER */}
-          <p className="text-center text-xs text-gray-600 py-4 mt-6">
+          <p className='text-center text-xs text-gray-600 py-4 mt-6'>
             © {new Date().getFullYear()} Fleet Management Dashboard
           </p>
         </div>

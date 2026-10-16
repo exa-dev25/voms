@@ -106,6 +106,7 @@ async function getCascadeOptions({
 async function filterTrips(params) {
   const { dateType, dateValue, driverName, originName, destinationName } =
     params;
+  const includeTrack = params.includeTrack === "true";
 
   const dateFilter = buildDateFilter(dateType, dateValue);
   const where = { ...dateFilter };
@@ -140,8 +141,8 @@ async function filterTrips(params) {
       origin: true,
       destination: true,
       positions: {
-        orderBy: { timestamp: "desc" },
-        take: 1,
+        orderBy: { timestamp: includeTrack ? "asc" : "desc" },
+        ...(includeTrack ? {} : { take: 1 }),
       },
       rfidEvents: {
         orderBy: { timestamp: "desc" },
@@ -152,7 +153,9 @@ async function filterTrips(params) {
   });
 
   return trips.map((trip) => {
-    const latest = trip.positions?.[0];
+    const latest = includeTrack
+      ? trip.positions?.[trip.positions.length - 1]
+      : trip.positions?.[0];
     let speed = trip.avgSpeed ?? latest?.speed ?? 0;
 
     return {

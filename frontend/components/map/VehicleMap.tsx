@@ -56,19 +56,27 @@ export default function VehicleMap({ height = 400 }: Props) {
 
   if (!mounted) {
     return (
-      <div className="h-[400px] bg-[#0C1A2A] rounded-lg flex items-center justify-center">
-        <span className="text-gray-400">Loading map…</span>
+      <div className='h-[400px] bg-[#0C1A2A] rounded-lg flex items-center justify-center'>
+        <span className='text-gray-400'>Loading map…</span>
       </div>
     );
   }
 
   return (
-    <div className="w-full rounded-lg overflow-hidden" style={{ height }}>
-      <MapContainer center={[-6.7, 107.2]} zoom={7} style={{ height: "100%", width: "100%" }}>
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+    <div className='w-full rounded-lg overflow-hidden' style={{ height }}>
+      <MapContainer
+        center={[-6.7, 107.2]}
+        zoom={7}
+        style={{ height: "100%", width: "100%" }}
+      >
+        <TileLayer url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' />
 
         {warehouses.map((wh) => (
-          <Marker key={wh.id} position={[wh.latitude, wh.longitude]} icon={warehouseIcon}>
+          <Marker
+            key={wh.id}
+            position={[wh.latitude, wh.longitude]}
+            icon={warehouseIcon}
+          >
             <Popup>
               <strong>{wh.name}</strong>
               <br />

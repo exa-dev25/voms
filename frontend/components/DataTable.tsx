@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { Trip, Filters } from "@/types";
 import { Eye, UserRound, X } from "lucide-react";
 import * as XLSX from "xlsx";
+import { handleUnauthorized } from "@/lib/api";
 
 interface Props {
   filters?: Filters;
@@ -81,7 +82,11 @@ export default function DataTable({ filters }: Props) {
         });
 
         if (!res.ok) {
-          console.error(`Failed to fetch trips: ${res.status}`);
+          if (res.status === 401) {
+            handleUnauthorized();
+          } else {
+            console.error(`Failed to fetch trips: ${res.status}`);
+          }
           setTrips([]);
           setTotal(0);
           return;
@@ -125,6 +130,10 @@ export default function DataTable({ filters }: Props) {
         const response = await fetch(`${API_URL}/api/drivers`, {
           headers: { Authorization: `Bearer ${session.accessToken}` },
         });
+        if (response.status === 401) {
+          handleUnauthorized();
+          return;
+        }
         if (!response.ok) throw new Error("Gagal memuat daftar driver.");
         setDriverOptions((await response.json()) as DriverOption[]);
       } catch (error) {
@@ -741,34 +750,34 @@ export default function DataTable({ filters }: Props) {
                       </div>
                     </td>
 
-                    <td className="px-4 py-4 text-right">
-  <div className="flex items-center justify-end gap-2">
-    <button
-      type="button"
-      onClick={() => {
-        setAssignmentError(null);
-        setSelectedDriverId(String(trip.driverId));
-        setSelectedTrip(trip);
-        setAssigningTrip(trip);
-      }}
-      aria-label={`Assign driver to trip ${trip.id}`}
-      title="Assign or change driver"
-      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-cyan-400/30 text-cyan-200 transition hover:bg-cyan-400/10 hover:text-cyan-100"
-    >
-      <UserRound className="h-4 w-4" aria-hidden="true" />
-    </button>
+                    <td className='px-4 py-4 text-right'>
+                      <div className='flex items-center justify-end gap-2'>
+                        <button
+                          type='button'
+                          onClick={() => {
+                            setAssignmentError(null);
+                            setSelectedDriverId(String(trip.driverId));
+                            setSelectedTrip(trip);
+                            setAssigningTrip(trip);
+                          }}
+                          aria-label={`Assign driver to trip ${trip.id}`}
+                          title='Assign or change driver'
+                          className='inline-flex h-9 w-9 items-center justify-center rounded-md border border-cyan-400/30 text-cyan-200 transition hover:bg-cyan-400/10 hover:text-cyan-100'
+                        >
+                          <UserRound className='h-4 w-4' aria-hidden='true' />
+                        </button>
 
-    <button
-      type="button"
-      onClick={() => setSelectedTrip(trip)}
-      aria-label={`View details for ${trip.driver?.name || "driver"}`}
-      title="View trip and driver details"
-      className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-gray-200 transition hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:text-white"
-    >
-      <Eye className="h-4 w-4" aria-hidden="true" />
-    </button>
-  </div>
-</td>
+                        <button
+                          type='button'
+                          onClick={() => setSelectedTrip(trip)}
+                          aria-label={`View details for ${trip.driver?.name || "driver"}`}
+                          title='View trip and driver details'
+                          className='inline-flex h-9 w-9 items-center justify-center rounded-md border border-white/15 text-gray-200 transition hover:border-cyan-400/50 hover:bg-cyan-400/10 hover:text-white'
+                        >
+                          <Eye className='h-4 w-4' aria-hidden='true' />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 );
               })

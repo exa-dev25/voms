@@ -47,50 +47,37 @@ const data = [
 
 export default function RouteChart() {
   return (
-    <div className="rounded-xl border border-[#1F2A37] bg-gradient-to-b from-[#0F172A] to-[#0B1220] p-5">
-      {/* HEADER */}
-      <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-sm font-semibold uppercase tracking-wide text-gray-200">
-          Route Duration: Planned vs Actual
+    <div className='rounded-xl border border-[#1F2A37] bg-gradient-to-b from-[#0F172A] to-[#0B1220] p-5 shadow-lg shadow-slate-900/20'>
+      <div className='mb-4 flex items-center justify-between gap-3'>
+        <h3 className='text-sm font-semibold uppercase tracking-wide text-gray-200'>
+          Planned vs Actual ETA by Route
         </h3>
 
-        <div className="flex items-center gap-4 text-xs text-gray-400">
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded bg-[#4B5563]" />
+        <div className='flex items-center gap-4 text-xs text-gray-400'>
+          <div className='flex items-center gap-1'>
+            <span className='h-2 w-2 rounded bg-[#4B5563]' />
             Planned
           </div>
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded bg-[#3B82F6]" />
+          <div className='flex items-center gap-1'>
+            <span className='h-2 w-2 rounded bg-[#3B82F6]' />
             Actual
           </div>
-          <div className="flex items-center gap-1">
-            <span className="h-2 w-2 rounded bg-[#EF4444]" />
-            Severe Delay
+          <div className='flex items-center gap-1'>
+            <span className='h-2 w-2 rounded bg-[#EF4444]' />
+            Delay
           </div>
         </div>
       </div>
 
-      {/* CHART */}
-      <div className="h-[300px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            barCategoryGap={22}
-            barGap={4}
-          >
-            <CartesianGrid
-              strokeDasharray="3 3"
-              stroke="#1F2937"
-            />
+      <div className='h-[300px]'>
+        <ResponsiveContainer width='100%' height='100%'>
+          <BarChart data={data} barCategoryGap={22} barGap={4}>
+            <CartesianGrid strokeDasharray='3 3' stroke='#1F2937' />
 
-            <XAxis
-              dataKey="route"
-              stroke="#9CA3AF"
-              fontSize={11}
-            />
+            <XAxis dataKey='route' stroke='#9CA3AF' fontSize={11} />
 
             <YAxis
-              stroke="#9CA3AF"
+              stroke='#9CA3AF'
               fontSize={11}
               tickFormatter={(v) => `${v}h`}
               domain={[0, 10]}
@@ -107,23 +94,9 @@ export default function RouteChart() {
               labelStyle={{ color: "#E5E7EB" }}
             />
 
-            <Bar
-              dataKey="planned"
-              fill="#4B5563"
-              radius={[4, 4, 0, 0]}
-            />
-
-            <Bar
-              dataKey="actual"
-              fill="#3B82F6"
-              radius={[4, 4, 0, 0]}
-            />
-
-            <Bar
-              dataKey="severe"
-              fill="#EF4444"
-              radius={[4, 4, 0, 0]}
-            />
+            <Bar dataKey='planned' fill='#4B5563' radius={[4, 4, 0, 0]} />
+            <Bar dataKey='actual' fill='#3B82F6' radius={[4, 4, 0, 0]} />
+            <Bar dataKey='severe' fill='#EF4444' radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>

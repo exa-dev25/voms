@@ -10,23 +10,21 @@ import VehiclePopup from "./VehiclePopup";
 // ============================
 const MapContainer = dynamic(
   () => import("react-leaflet").then((m) => m.MapContainer),
-  { ssr: false }
+  { ssr: false },
 );
 const TileLayer = dynamic(
   () => import("react-leaflet").then((m) => m.TileLayer),
-  { ssr: false }
+  { ssr: false },
 );
-const Marker = dynamic(
-  () => import("react-leaflet").then((m) => m.Marker),
-  { ssr: false }
-);
-const Popup = dynamic(
-  () => import("react-leaflet").then((m) => m.Popup),
-  { ssr: false }
-);
+const Marker = dynamic(() => import("react-leaflet").then((m) => m.Marker), {
+  ssr: false,
+});
+const Popup = dynamic(() => import("react-leaflet").then((m) => m.Popup), {
+  ssr: false,
+});
 const Polyline = dynamic(
   () => import("react-leaflet").then((m) => m.Polyline),
-  { ssr: false }
+  { ssr: false },
 );
 
 // ============================
@@ -56,10 +54,34 @@ interface MapViewProps {
 // ============================
 const defaultVehicles: Vehicle[] = [
   { id: "TRK-8821", name: "John Doe", status: "trip", lat: -6.21, lng: 106.82 },
-  { id: "TRK-9900", name: "Mike R.", status: "alert", lat: -6.215, lng: 106.81 },
-  { id: "FLT-2210", name: "Alex K.", status: "active", lat: -6.205, lng: 106.825 },
-  { id: "VSL-9921", name: "Sarah M.", status: "idle", lat: -6.2148, lng: 106.812 },
-  { id: "XYZ-9001", name: "David L.", status: "off", lat: -6.217, lng: 106.809 },
+  {
+    id: "TRK-9900",
+    name: "Mike R.",
+    status: "alert",
+    lat: -6.215,
+    lng: 106.81,
+  },
+  {
+    id: "FLT-2210",
+    name: "Alex K.",
+    status: "active",
+    lat: -6.205,
+    lng: 106.825,
+  },
+  {
+    id: "VSL-9921",
+    name: "Sarah M.",
+    status: "idle",
+    lat: -6.2148,
+    lng: 106.812,
+  },
+  {
+    id: "XYZ-9001",
+    name: "David L.",
+    status: "off",
+    lat: -6.217,
+    lng: 106.809,
+  },
 ];
 
 // ============================
@@ -67,13 +89,16 @@ const defaultVehicles: Vehicle[] = [
 // ============================
 const statusColor: Record<VehicleStatus, string> = {
   active: "#22c55e", // green
-  trip: "#facc15",   // yellow
-  alert: "#ef4444",  // red
-  idle: "#3b82f6",   // blue
-  off: "#9ca3af",    // gray
+  trip: "#facc15", // yellow
+  alert: "#ef4444", // red
+  idle: "#3b82f6", // blue
+  off: "#9ca3af", // gray
 };
 
-export default function MapView({ vehicles: propsVehicles, selectedVehicleId }: MapViewProps) {
+export default function MapView({
+  vehicles: propsVehicles,
+  selectedVehicleId,
+}: MapViewProps) {
   const mapRef = useRef<any>(null);
   const [mounted, setMounted] = useState(false);
   const [L, setL] = useState<any>(null);
@@ -101,12 +126,12 @@ export default function MapView({ vehicles: propsVehicles, selectedVehicleId }: 
     const fetchRoute = async () => {
       try {
         const res = await fetch(
-          "https://router.project-osrm.org/route/v1/driving/106.82,-6.21;106.816,-6.595?overview=full&geometries=geojson"
+          "https://router.project-osrm.org/route/v1/driving/106.82,-6.21;106.816,-6.595?overview=full&geometries=geojson",
         );
         const data = await res.json();
         if (data?.routes?.[0]?.geometry?.coordinates) {
           const coords = data.routes[0].geometry.coordinates.map(
-            ([lng, lat]: [number, number]) => [lat, lng]
+            ([lng, lat]: [number, number]) => [lat, lng],
           );
           setRoutePath(coords);
         }
@@ -124,7 +149,9 @@ export default function MapView({ vehicles: propsVehicles, selectedVehicleId }: 
   useEffect(() => {
     if (!mapRef.current || !selectedVehicleId) return;
 
-    const vehicle = activeVehicles.find((v) => v.id === selectedVehicleId || v.code === selectedVehicleId);
+    const vehicle = activeVehicles.find(
+      (v) => v.id === selectedVehicleId || v.code === selectedVehicleId,
+    );
     if (!vehicle) return;
 
     const lat = vehicle.lat ?? vehicle.position?.[0];
@@ -173,16 +200,16 @@ export default function MapView({ vehicles: propsVehicles, selectedVehicleId }: 
   if (!mounted || !icons) return null;
 
   return (
-    <div className="absolute inset-0">
+    <div className='absolute inset-0'>
       <MapContainer
         ref={mapRef}
         center={[-6.21, 106.82]}
         zoom={11}
-        className="h-full w-full"
+        className='h-full w-full'
       >
         <TileLayer
-          attribution="© OpenStreetMap"
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='© OpenStreetMap'
+          url='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
         />
 
         {/* ROUTE */}

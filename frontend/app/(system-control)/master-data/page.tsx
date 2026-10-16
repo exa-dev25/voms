@@ -58,12 +58,14 @@ export default function SystemManagementPage() {
   const data = getData();
 
   return (
-    <div className="p-6 space-y-6 text-white">
-      <h1 className="text-2xl font-semibold">System Management</h1>
-      <p className="text-white/60">Kelola semua data sistem dalam satu halaman.</p>
+    <div className='p-6 space-y-6 text-white'>
+      <h1 className='text-2xl font-semibold'>System Management</h1>
+      <p className='text-white/60'>
+        Kelola semua data sistem dalam satu halaman.
+      </p>
 
       {/* ===================== TABS ===================== */}
-      <div className="flex gap-3">
+      <div className='flex gap-3'>
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -83,28 +85,27 @@ export default function SystemManagementPage() {
       </div>
 
       {/* ===================== GRID WRAPPER ===================== */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-6'>
         {/* ===================== TABLE SECTION ===================== */}
-        <div className="col-span-2 bg-[#0D1B2A] border border-white/10 rounded-xl p-5">
-          <h2 className="text-lg font-medium mb-4">{activeTab} Table</h2>
+        <div className='col-span-2 bg-[#0D1B2A] border border-white/10 rounded-xl p-5'>
+          <h2 className='text-lg font-medium mb-4'>{activeTab} Table</h2>
 
-          <table className="w-full text-sm">
+          <table className='w-full text-sm'>
             <thead>
-              <tr className="bg-[#030E1C]">
-                <th className="p-3 text-left">NAME</th>
-                <th className="p-3 text-left">ACTIONS</th>
+              <tr className='bg-[#030E1C]'>
+                <th className='p-3 text-left'>NAME</th>
+                <th className='p-3 text-left'>ACTIONS</th>
               </tr>
             </thead>
             <tbody>
               {data.map((item: any) => (
-                <tr key={item.id} className="border-b border-white/5">
-                  <td className="p-3">{item.name}</td>
-                  <td className="p-3">
-                    <button className="px-3 py-1 bg-yellow-600 rounded mr-2">
+                <tr key={item.id} className='border-b border-white/5'>
+                  <td className='p-3'>{item.name}</td>
+                  <td className='p-3'>
+                    <button className='px-3 py-1 bg-yellow-600 rounded mr-2'>
                       Edit
                     </button>
-                    <button className="px-3 py-1 bg-red-600 rounded">
+                    <button className='px-3 py-1 bg-red-600 rounded'>
                       Delete
                     </button>
                   </td>
@@ -115,38 +116,39 @@ export default function SystemManagementPage() {
         </div>
 
         {/* ===================== FORM SECTION ===================== */}
-        <div className="bg-[#0D1B2A] border border-white/10 rounded-xl p-6">
-          <h2 className="text-lg font-semibold mb-4">Add New {activeTab}</h2>
+        <div className='bg-[#0D1B2A] border border-white/10 rounded-xl p-6'>
+          <h2 className='text-lg font-semibold mb-4'>Add New {activeTab}</h2>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className='space-y-4'>
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={
-                activeTab === "Vehicle" ? "Masukkan plat nomor" : `Nama ${activeTab}`
+                activeTab === "Vehicle"
+                  ? "Masukkan plat nomor"
+                  : `Nama ${activeTab}`
               }
-              className="w-full p-3 rounded bg-[#0C1A2A] border border-white/10"
+              className='w-full p-3 rounded bg-[#0C1A2A] border border-white/10'
             />
 
-            <div className="flex justify-end gap-3">
+            <div className='flex justify-end gap-3'>
               <button
-                type="button"
-                className="px-4 py-2 bg-gray-600 rounded"
+                type='button'
+                className='px-4 py-2 bg-gray-600 rounded'
                 onClick={() => setInput("")}
               >
                 Cancel
               </button>
 
               <button
-                type="submit"
-                className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700"
+                type='submit'
+                className='px-4 py-2 bg-blue-600 rounded hover:bg-blue-700'
               >
                 Add
               </button>
             </div>
           </form>
         </div>
-
       </div>
     </div>
   );

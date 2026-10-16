@@ -116,7 +116,7 @@ export default function UsersPage() {
       filtered = filtered.filter(
         (user) =>
           user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase())
+          user.email.toLowerCase().includes(searchTerm.toLowerCase()),
       );
     }
 
@@ -195,7 +195,7 @@ export default function UsersPage() {
           headers: {
             Authorization: `Bearer ${session.accessToken}`,
           },
-        }
+        },
       );
 
       if (!res.ok) throw new Error("Failed to fetch activities");
@@ -391,13 +391,13 @@ export default function UsersPage() {
   const getRoleIcon = (role: string) => {
     switch (role) {
       case "SUPERADMIN":
-        return <Shield className="w-4 h-4" />;
+        return <Shield className='w-4 h-4' />;
       case "ADMIN":
-        return <Shield className="w-4 h-4" />;
+        return <Shield className='w-4 h-4' />;
       case "USER":
-        return <Users className="w-4 h-4" />;
+        return <Users className='w-4 h-4' />;
       default:
-        return <Eye className="w-4 h-4" />;
+        return <Eye className='w-4 h-4' />;
     }
   };
 
@@ -421,76 +421,76 @@ export default function UsersPage() {
   };
 
   return (
-    <ProtectedPage requiredRole="ADMIN">
-      <main className="min-h-screen bg-[#0a0e1a] text-gray-200 p-4">
-        <div className="w-full space-y-4">
+    <ProtectedPage requiredRole='ADMIN'>
+      <main className='min-h-screen bg-[#0a0e1a] text-gray-200 p-4'>
+        <div className='w-full space-y-4'>
           {/* Header */}
-          <div className="bg-[#0f1729] border border-cyan-400/30 rounded-lg p-4">
-            <div className="flex items-center justify-between mb-2">
-              <h1 className="text-2xl font-bold text-cyan-400 tracking-wide drop-shadow-[0_0_8px_#00FFFF80]">
+          <div className='bg-[#0f1729] border border-cyan-400/30 rounded-lg p-4'>
+            <div className='flex items-center justify-between mb-2'>
+              <h1 className='text-2xl font-bold text-cyan-400 tracking-wide drop-shadow-[0_0_8px_#00FFFF80]'>
                 User Management
               </h1>
               <button
                 onClick={() => setShowAddModal(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all shadow-[0_0_10px_#00FFFF40] hover:shadow-[0_0_15px_#00FFFF60] text-sm font-medium"
+                className='flex items-center gap-2 px-4 py-2 bg-cyan-500 hover:bg-cyan-600 text-white rounded-lg transition-all shadow-[0_0_10px_#00FFFF40] hover:shadow-[0_0_15px_#00FFFF60] text-sm font-medium'
               >
-                <UserPlus className="w-4 h-4" />
+                <UserPlus className='w-4 h-4' />
                 Add New User
               </button>
             </div>
-            <p className="text-gray-400 text-sm">
+            <p className='text-gray-400 text-sm'>
               Manage user accounts and access permissions.
             </p>
           </div>
 
           {/* Alerts */}
           {error && (
-            <div className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start gap-2">
-              <X className="w-4 h-4 text-red-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-red-300 text-sm font-medium">{error}</p>
+            <div className='bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-start gap-2'>
+              <X className='w-4 h-4 text-red-400 flex-shrink-0 mt-0.5' />
+              <div className='flex-1'>
+                <p className='text-red-300 text-sm font-medium'>{error}</p>
               </div>
               <button
                 onClick={() => setError("")}
-                className="text-red-400 hover:text-red-300"
+                className='text-red-400 hover:text-red-300'
               >
-                <X className="w-4 h-4" />
+                <X className='w-4 h-4' />
               </button>
             </div>
           )}
 
           {success && (
-            <div className="bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-start gap-2">
-              <Check className="w-4 h-4 text-green-400 flex-shrink-0 mt-0.5" />
-              <div className="flex-1">
-                <p className="text-green-300 text-sm font-medium">{success}</p>
+            <div className='bg-green-500/10 border border-green-500/30 rounded-lg p-3 flex items-start gap-2'>
+              <Check className='w-4 h-4 text-green-400 flex-shrink-0 mt-0.5' />
+              <div className='flex-1'>
+                <p className='text-green-300 text-sm font-medium'>{success}</p>
               </div>
               <button
                 onClick={() => setSuccess("")}
-                className="text-green-400 hover:text-green-300"
+                className='text-green-400 hover:text-green-300'
               >
-                <X className="w-4 h-4" />
+                <X className='w-4 h-4' />
               </button>
             </div>
           )}
 
           {/* Filters */}
-          <div className="bg-[#0f1729] border border-cyan-400/30 rounded-lg p-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div className='bg-[#0f1729] border border-cyan-400/30 rounded-lg p-4'>
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-3'>
               {/* Search */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+              <div className='relative'>
+                <Search className='absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500' />
                 <input
-                  type="text"
-                  placeholder="Search by name or email"
+                  type='text'
+                  placeholder='Search by name or email'
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-[#1a2235] border border-cyan-400/20 rounded-lg text-gray-200 text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-400/50"
+                  className='w-full pl-10 pr-4 py-2 bg-[#1a2235] border border-cyan-400/20 rounded-lg text-gray-200 text-sm placeholder-gray-500 focus:outline-none focus:border-cyan-400/50'
                 />
               </div>
 
               {/* Role Filter */}
-              <div className="flex gap-2 flex-wrap">
+              <div className='flex gap-2 flex-wrap'>
                 {["All Roles", ...roles].map((role) => (
                   <button
                     key={role}
@@ -509,71 +509,71 @@ export default function UsersPage() {
           </div>
 
           {/* Users Table and Activity Logs */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <div className='grid grid-cols-1 lg:grid-cols-3 gap-4'>
             {/* Users Table - Left Side (2/3 width) */}
-            <div className="lg:col-span-2 bg-[#0f1729] border border-cyan-400/30 rounded-lg overflow-hidden">
-              <div className="px-4 py-3 border-b border-cyan-400/20 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-cyan-400">
+            <div className='lg:col-span-2 bg-[#0f1729] border border-cyan-400/30 rounded-lg overflow-hidden'>
+              <div className='px-4 py-3 border-b border-cyan-400/20 flex items-center justify-between'>
+                <h2 className='text-sm font-semibold text-cyan-400'>
                   User Table
                 </h2>
                 {!loading && (
-                  <span className="text-xs text-gray-500">
+                  <span className='text-xs text-gray-500'>
                     {filteredUsers.length} users
                   </span>
                 )}
               </div>
 
               {loading ? (
-                <div className="p-12 text-center text-cyan-400 text-sm">
+                <div className='p-12 text-center text-cyan-400 text-sm'>
                   Loading...
                 </div>
               ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-[#1a2235]">
+                <div className='overflow-x-auto'>
+                  <table className='w-full'>
+                    <thead className='bg-[#1a2235]'>
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                           User Name
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                           Email
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                           Role
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                           Status
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        <th className='px-4 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider'>
                           Last Login
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        <th className='px-4 py-3 text-right text-xs font-medium text-gray-400 uppercase tracking-wider'>
                           Actions
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-cyan-400/10">
+                    <tbody className='divide-y divide-cyan-400/10'>
                       {filteredUsers.map((user) => (
                         <tr
                           key={user.id}
-                          className="hover:bg-cyan-400/5 transition-colors"
+                          className='hover:bg-cyan-400/5 transition-colors'
                         >
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className="font-medium text-gray-200 text-sm">
+                          <td className='px-4 py-3 whitespace-nowrap'>
+                            <div className='font-medium text-gray-200 text-sm'>
                               {user.name}
                               {user.jobRole && (
-                                <div className="text-xs text-gray-500">
+                                <div className='text-xs text-gray-500'>
                                   {user.jobRole}
                                 </div>
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
-                            <div className="text-gray-400 text-sm">
+                          <td className='px-4 py-3 whitespace-nowrap'>
+                            <div className='text-gray-400 text-sm'>
                               {user.email}
                             </div>
                           </td>
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className='px-4 py-3 whitespace-nowrap'>
                             <div
                               className={`inline-flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium border ${
                                 roleColors[user.role]
@@ -585,39 +585,39 @@ export default function UsersPage() {
                           </td>
 
                           {/* Status */}
-                          <td className="px-4 py-3 whitespace-nowrap">
+                          <td className='px-4 py-3 whitespace-nowrap'>
                             {user.lastLoginAt ? (
-                              <span className="text-green-400 text-xs font-medium">
+                              <span className='text-green-400 text-xs font-medium'>
                                 Active
                               </span>
                             ) : (
-                              <span className="text-gray-500 text-xs font-medium">
+                              <span className='text-gray-500 text-xs font-medium'>
                                 Inactive
                               </span>
                             )}
                           </td>
 
                           {/* Last Login */}
-                          <td className="px-4 py-3 whitespace-nowrap text-gray-400 text-xs">
+                          <td className='px-4 py-3 whitespace-nowrap text-gray-400 text-xs'>
                             {formatDate(user.lastLoginAt)}
                           </td>
 
                           {/* Actions */}
-                          <td className="px-4 py-3 whitespace-nowrap text-right">
-                            <div className="flex items-center justify-end gap-2">
+                          <td className='px-4 py-3 whitespace-nowrap text-right'>
+                            <div className='flex items-center justify-end gap-2'>
                               <button
                                 onClick={() => {
                                   // make sure selectedUser carries jobRole too
                                   setSelectedUser(user);
                                   setShowEditModal(true);
                                 }}
-                                className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded border border-yellow-500/30 hover:bg-yellow-500/30"
+                                className='px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded border border-yellow-500/30 hover:bg-yellow-500/30'
                               >
                                 Edit
                               </button>
                               <button
                                 onClick={() => handleDeleteUser(user.id)}
-                                className="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded border border-red-500/30 hover:bg-red-500/30"
+                                className='px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded border border-red-500/30 hover:bg-red-500/30'
                               >
                                 Delete
                               </button>
@@ -632,43 +632,43 @@ export default function UsersPage() {
             </div>
 
             {/* Activity Log - Right Side */}
-            <div className="bg-[#0f1729] border border-cyan-400/30 rounded-lg overflow-hidden">
-              <div className="px-4 py-3 border-b border-cyan-400/20 flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-cyan-400">
+            <div className='bg-[#0f1729] border border-cyan-400/30 rounded-lg overflow-hidden'>
+              <div className='px-4 py-3 border-b border-cyan-400/20 flex items-center justify-between'>
+                <h2 className='text-sm font-semibold text-cyan-400'>
                   Activity Logs
                 </h2>
               </div>
 
               {loadingActivities ? (
-                <div className="p-6 text-center text-cyan-400 text-sm">
+                <div className='p-6 text-center text-cyan-400 text-sm'>
                   Loading logs...
                 </div>
               ) : (
-                <div className="max-h-[460px] overflow-y-auto custom-scroll">
+                <div className='max-h-[460px] overflow-y-auto custom-scroll'>
                   {activities.length === 0 ? (
-                    <p className="p-4 text-gray-500 text-sm">
+                    <p className='p-4 text-gray-500 text-sm'>
                       No activity records found.
                     </p>
                   ) : (
-                    <ul className="divide-y divide-cyan-400/10">
+                    <ul className='divide-y divide-cyan-400/10'>
                       {activities.map((log) => (
-                        <li key={log.id} className="p-4 hover:bg-cyan-400/5">
-                          <div className="flex items-center gap-3">
+                        <li key={log.id} className='p-4 hover:bg-cyan-400/5'>
+                          <div className='flex items-center gap-3'>
                             <span
                               className={`text-lg font-bold ${getActionColor(
-                                log.action
+                                log.action,
                               )}`}
                             >
                               {getActionIcon(log.action)}
                             </span>
-                            <div className="flex-1">
-                              <p className="text-sm text-gray-300">
-                                <span className="font-semibold text-cyan-400">
+                            <div className='flex-1'>
+                              <p className='text-sm text-gray-300'>
+                                <span className='font-semibold text-cyan-400'>
                                   {log.user.name}
                                 </span>{" "}
                                 {log.description}
                               </p>
-                              <p className="text-xs text-gray-500 mt-1">
+                              <p className='text-xs text-gray-500 mt-1'>
                                 {formatDate(log.createdAt)}
                               </p>
                             </div>
@@ -681,23 +681,23 @@ export default function UsersPage() {
               )}
 
               {/* Pagination */}
-              <div className="p-3 flex justify-between items-center border-t border-cyan-400/20 text-xs">
+              <div className='p-3 flex justify-between items-center border-t border-cyan-400/20 text-xs'>
                 <button
                   disabled={activityPage === 1}
                   onClick={() => setActivityPage(activityPage - 1)}
-                  className="px-3 py-1 bg-[#1a2235] rounded disabled:opacity-30"
+                  className='px-3 py-1 bg-[#1a2235] rounded disabled:opacity-30'
                 >
                   Prev
                 </button>
 
-                <span className="text-gray-400">
+                <span className='text-gray-400'>
                   Page {activityPage} / {totalActivityPages}
                 </span>
 
                 <button
                   disabled={activityPage === totalActivityPages}
                   onClick={() => setActivityPage(activityPage + 1)}
-                  className="px-3 py-1 bg-[#1a2235] rounded disabled:opacity-30"
+                  className='px-3 py-1 bg-[#1a2235] rounded disabled:opacity-30'
                 >
                   Next
                 </button>
@@ -707,37 +707,37 @@ export default function UsersPage() {
 
           {/* ADD USER MODAL */}
           {showAddModal && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-[#0f1729] border border-cyan-400/40 rounded-lg w-full max-w-md p-6">
-                <h2 className="text-xl font-semibold text-cyan-400 mb-4">
+            <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
+              <div className='bg-[#0f1729] border border-cyan-400/40 rounded-lg w-full max-w-md p-6'>
+                <h2 className='text-xl font-semibold text-cyan-400 mb-4'>
                   Add New User
                 </h2>
 
-                <div className="space-y-3">
+                <div className='space-y-3'>
                   <input
-                    type="text"
-                    placeholder="Full Name"
+                    type='text'
+                    placeholder='Full Name'
                     value={newUser.name}
                     onChange={(e) =>
                       setNewUser({ ...newUser, name: e.target.value })
                     }
-                    className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                    className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                   />
 
                   <input
-                    type="email"
-                    placeholder="Email"
+                    type='email'
+                    placeholder='Email'
                     value={newUser.email}
                     onChange={(e) =>
                       setNewUser({ ...newUser, email: e.target.value })
                     }
-                    className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                    className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                   />
 
-                  <div className="relative">
+                  <div className='relative'>
                     <input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Password"
+                      placeholder='Password'
                       value={newUser.password}
                       onChange={(e) =>
                         setNewUser({
@@ -745,11 +745,11 @@ export default function UsersPage() {
                           password: e.target.value,
                         })
                       }
-                      className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                      className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                     />
 
                     <button
-                      className="absolute right-2 top-2 text-gray-400"
+                      className='absolute right-2 top-2 text-gray-400'
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? <EyeOff /> : <Eye />}
@@ -757,8 +757,8 @@ export default function UsersPage() {
                   </div>
 
                   <input
-                    type="password"
-                    placeholder="Confirm password"
+                    type='password'
+                    placeholder='Confirm password'
                     value={newUser.confirmPassword}
                     onChange={(e) =>
                       setNewUser({
@@ -766,7 +766,7 @@ export default function UsersPage() {
                         confirmPassword: e.target.value,
                       })
                     }
-                    className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                    className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                   />
 
                   <select
@@ -777,7 +777,7 @@ export default function UsersPage() {
                         role: e.target.value as any,
                       })
                     }
-                    className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                    className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                   >
                     {roles.map((r) => (
                       <option key={r} value={r}>
@@ -788,7 +788,7 @@ export default function UsersPage() {
 
                   {/* NEW: jobRole dropdown with description */}
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">
+                    <label className='block text-xs text-gray-400 mb-1'>
                       Job Role — pilih peran pekerjaan pengguna (opsional)
                     </label>
                     <select
@@ -796,9 +796,9 @@ export default function UsersPage() {
                       onChange={(e) =>
                         setNewUser({ ...newUser, jobRole: e.target.value })
                       }
-                      className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                      className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                     >
-                      <option value="">-- Select job role (optional) --</option>
+                      <option value=''>-- Select job role (optional) --</option>
                       {jobRoles.map((jr) => (
                         <option key={jr} value={jr}>
                           {jr}
@@ -808,16 +808,16 @@ export default function UsersPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-6">
+                <div className='flex justify-end gap-3 mt-6'>
                   <button
                     onClick={() => setShowAddModal(false)}
-                    className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded text-red-300 text-sm"
+                    className='px-4 py-2 bg-red-500/20 border border-red-500/30 rounded text-red-300 text-sm'
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleAddUser}
-                    className="px-4 py-2 bg-cyan-500 text-white rounded text-sm"
+                    className='px-4 py-2 bg-cyan-500 text-white rounded text-sm'
                   >
                     Add User
                   </button>
@@ -828,15 +828,15 @@ export default function UsersPage() {
 
           {/* EDIT USER MODAL */}
           {showEditModal && selectedUser && (
-            <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-              <div className="bg-[#0f1729] border border-cyan-400/40 rounded-lg w-full max-w-md p-6">
-                <h2 className="text-xl font-semibold text-cyan-400 mb-4">
+            <div className='fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4'>
+              <div className='bg-[#0f1729] border border-cyan-400/40 rounded-lg w-full max-w-md p-6'>
+                <h2 className='text-xl font-semibold text-cyan-400 mb-4'>
                   Edit User
                 </h2>
 
-                <div className="space-y-3">
+                <div className='space-y-3'>
                   <input
-                    type="text"
+                    type='text'
                     value={selectedUser.name}
                     onChange={(e) =>
                       setSelectedUser({
@@ -844,11 +844,11 @@ export default function UsersPage() {
                         name: e.target.value,
                       })
                     }
-                    className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                    className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                   />
 
                   <input
-                    type="email"
+                    type='email'
                     value={selectedUser.email}
                     onChange={(e) =>
                       setSelectedUser({
@@ -856,7 +856,7 @@ export default function UsersPage() {
                         email: e.target.value,
                       })
                     }
-                    className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                    className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                   />
 
                   <select
@@ -867,7 +867,7 @@ export default function UsersPage() {
                         role: e.target.value as any,
                       })
                     }
-                    className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                    className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                   >
                     {roles.map((r) => (
                       <option key={r} value={r}>
@@ -878,7 +878,7 @@ export default function UsersPage() {
 
                   {/* NEW: jobRole dropdown with description */}
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">
+                    <label className='block text-xs text-gray-400 mb-1'>
                       Job Role — pilih peran pekerjaan pengguna (opsional)
                     </label>
                     <select
@@ -889,9 +889,9 @@ export default function UsersPage() {
                           jobRole: e.target.value,
                         } as User)
                       }
-                      className="w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm"
+                      className='w-full p-2 bg-[#1a2235] rounded border border-cyan-400/20 text-sm'
                     >
-                      <option value="">-- Select job role (optional) --</option>
+                      <option value=''>-- Select job role (optional) --</option>
                       {jobRoles.map((jr) => (
                         <option key={jr} value={jr}>
                           {jr}
@@ -901,19 +901,19 @@ export default function UsersPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-6">
+                <div className='flex justify-end gap-3 mt-6'>
                   <button
                     onClick={() => {
                       setShowEditModal(false);
                       setSelectedUser(null);
                     }}
-                    className="px-4 py-2 bg-red-500/20 border border-red-500/30 rounded text-red-300 text-sm"
+                    className='px-4 py-2 bg-red-500/20 border border-red-500/30 rounded text-red-300 text-sm'
                   >
                     Cancel
                   </button>
                   <button
                     onClick={handleEditUser}
-                    className="px-4 py-2 bg-yellow-500 text-white rounded text-sm"
+                    className='px-4 py-2 bg-yellow-500 text-white rounded text-sm'
                   >
                     Save Changes
                   </button>

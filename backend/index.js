@@ -23,6 +23,7 @@ const authRoutes = require("./src/routes/auth.routes");
 const activityRoutes = require("./src/routes/activity.routes");
 const dashboardRoutes = require("./src/routes/dashboard.routes");
 const tripFilterRoutes = require("./src/routes/tripFilter.routes");
+const alertRoutes = require("./src/routes/alert.routes");
 
 const driverRoutes = require("./src/routes/driver.routes");
 const vehicleRoutes = require("./src/routes/vehicle.routes");
@@ -67,6 +68,7 @@ app.use("/api", authMiddleware);
 app.use("/api/activity", activityRoutes);
 app.use("/api", dashboardRoutes);
 app.use("/api/trips", tripFilterRoutes);
+app.use("/api/alerts", alertRoutes);
 
 // ---- master data & core modules ----
 app.use("/api", driverRoutes);

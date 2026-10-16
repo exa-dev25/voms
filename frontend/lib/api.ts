@@ -1,8 +1,19 @@
-import { getSession } from "next-auth/react";
+import { getSession, signOut } from "next-auth/react";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
+let signOutStarted = false;
 
-export async function fetchWithAuth(endpoint: string, options: RequestInit = {}) {
+export function handleUnauthorized() {
+  if (typeof window === "undefined" || signOutStarted) return;
+
+  signOutStarted = true;
+  void signOut({ callbackUrl: "/login" });
+}
+
+export async function fetchWithAuth(
+  endpoint: string,
+  options: RequestInit = {},
+) {
   const session = await getSession();
 
   const headers: HeadersInit = {
@@ -20,8 +31,14 @@ export async function fetchWithAuth(endpoint: string, options: RequestInit = {})
     headers,
   });
 
+  if (response.status === 401) {
+    handleUnauthorized();
+  }
+
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: "Request failed" }));
+    const error = await response
+      .json()
+      .catch(() => ({ error: "Request failed" }));
     throw new Error(error.error || "API request failed");
   }
 

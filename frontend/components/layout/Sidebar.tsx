@@ -3,8 +3,25 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { Menu, X } from "lucide-react";
+
+const SIDEBAR_TOGGLE_EVENT = "voms:sidebar-toggle";
+
+export function SidebarToggle() {
+  return (
+    <button
+      type='button'
+      aria-label='Open navigation menu'
+      title='Open navigation menu'
+      onClick={() => window.dispatchEvent(new Event(SIDEBAR_TOGGLE_EVENT))}
+      className='inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-gray-300 transition hover:border-cyan-400/40 hover:bg-cyan-400/10 hover:text-cyan-300'
+    >
+      <Menu className='h-5 w-5' aria-hidden='true' />
+    </button>
+  );
+}
 
 const menuItems = [
   {
@@ -75,7 +92,6 @@ const menuItems = [
       {
         name: "Alerts",
         href: "/alerts",
-        badge: 3,
         icon: (
           <svg
             className='w-5 h-5'
@@ -217,123 +233,129 @@ const menuItems = [
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
-  const [collapsed, setCollapsed] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
   const canManageSystem = ["ADMIN", "SUPERADMIN"].includes(
     session?.user?.role ?? "",
   );
 
+  useEffect(() => {
+    const toggleSidebar = () => setIsOpen((open) => !open);
+    window.addEventListener(SIDEBAR_TOGGLE_EVENT, toggleSidebar);
+    return () =>
+      window.removeEventListener(SIDEBAR_TOGGLE_EVENT, toggleSidebar);
+  }, []);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setIsOpen(false);
+    };
+
+    document.addEventListener("keydown", closeOnEscape);
+    return () => document.removeEventListener("keydown", closeOnEscape);
+  }, [isOpen]);
+
   return (
-    <aside
-      className={`${collapsed ? "w-20" : "w-64"} 
-      bg-gradient-to-b from-[#0D1117] via-[#0F172A] to-[#020617]
-      border-r border-cyan-500/20 transition-all duration-300 flex flex-col`}
-    >
-      {/* Logo */}
-      <div className='h-16 flex items-center justify-between px-4 border-b border-cyan-500/20'>
-        {!collapsed && (
+    <>
+      {isOpen && (
+        <button
+          type='button'
+          aria-label='Close navigation menu'
+          onClick={() => setIsOpen(false)}
+          className='fixed inset-0 z-1000 cursor-default bg-black/60 backdrop-blur-[2px]'
+        />
+      )}
+
+      <aside
+        role='dialog'
+        aria-label='Main navigation'
+        aria-modal={isOpen}
+        aria-hidden={!isOpen}
+        inert={!isOpen}
+        className={`fixed inset-y-0 left-0 z-1001 flex w-[min(18rem,calc(100vw-2rem))] flex-col border-r border-cyan-500/20 bg-linear-to-b from-[#0D1117] via-[#0F172A] to-[#020617] shadow-2xl shadow-black/50 transition-transform duration-300 ${isOpen ? "translate-x-0" : "-translate-x-full pointer-events-none"}`}
+      >
+        <div className='flex h-16 items-center justify-between border-b border-cyan-500/20 px-4'>
           <div className='flex items-center gap-2'>
-            <div className='w-8 h-8 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-lg flex items-center justify-center shadow-lg shadow-cyan-500/40'>
+            <div className='flex h-8 w-8 items-center justify-center rounded-lg bg-linear-to-br from-cyan-400 to-blue-500 shadow-lg shadow-cyan-500/40'>
               <svg
-                className='w-5 h-5 text-white'
+                className='h-5 w-5 text-white'
                 fill='none'
                 stroke='currentColor'
                 viewBox='0 0 24 24'
+                aria-hidden='true'
               >
                 <path
                   strokeLinecap='round'
                   strokeLinejoin='round'
                   strokeWidth={2}
-                  d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z'
+                  d='M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-.293.707L17 21z'
                 />
               </svg>
             </div>
             <div>
-              <h1 className='text-white font-bold text-sm'>VOMS</h1>
-              <p className='text-gray-500 text-xs'>OPS Monitor</p>
+              <h1 className='text-sm font-bold text-white'>VOMS</h1>
+              <p className='text-xs text-gray-500'>OPS Monitor</p>
             </div>
           </div>
-        )}
 
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className='p-1.5 hover:bg-cyan-500/10 rounded-lg'
-        >
-          <svg
-            className={`w-5 h-5 text-gray-400 transition-transform ${collapsed ? "rotate-180" : ""}`}
-            fill='none'
-            stroke='currentColor'
-            viewBox='0 0 24 24'
+          <button
+            type='button'
+            aria-label='Close navigation menu'
+            onClick={() => setIsOpen(false)}
+            className='rounded-lg p-2 text-gray-400 transition hover:bg-white/10 hover:text-white'
           >
-            <path
-              strokeLinecap='round'
-              strokeLinejoin='round'
-              strokeWidth={2}
-              d='M11 19l-7-7 7-7m8 14l-7-7 7-7'
-            />
-          </svg>
-        </button>
-      </div>
+            <X className='h-5 w-5' aria-hidden='true' />
+          </button>
+        </div>
 
-      <nav className='flex-1 overflow-y-auto py-4 px-3'>
-        {menuItems.map((section, idx) => {
-          if (section.section === "SYSTEM CONTROL" && !canManageSystem) {
-            return null;
-          }
+        <nav
+          aria-label='Primary navigation'
+          className='flex-1 overflow-y-auto px-3 py-4'
+        >
+          {menuItems.map((section) => {
+            if (section.section === "SYSTEM CONTROL" && !canManageSystem) {
+              return null;
+            }
 
-          return (
-            <div key={idx} className='mb-6'>
-              {!collapsed && (
-                <h3 className='text-xs font-semibold text-gray-400 tracking-widest px-3 mb-2'>
+            return (
+              <div key={section.section} className='mb-6'>
+                <h2 className='mb-2 px-3 text-xs font-semibold tracking-widest text-gray-400'>
                   {section.section}
-                </h3>
-              )}
+                </h2>
 
-              <ul className='space-y-1'>
-                {section.items.map((item) => {
-                  const isActive = pathname === item.href;
+                <ul className='space-y-1'>
+                  {section.items.map((item) => {
+                    const isActive = pathname === item.href;
 
-                  return (
-                    <li key={item.href}>
-                      <Link
-                        href={item.href}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all
-                      ${
-                        isActive
-                          ? "bg-gradient-to-r from-cyan-500/20 via-blue-500/15 to-purple-500/10 text-cyan-400 border border-cyan-400/30 shadow-lg shadow-cyan-500/20"
-                          : "text-gray-400 hover:bg-gradient-to-r hover:from-cyan-500/10 hover:to-blue-500/10 hover:text-white"
-                      }`}
-                      >
-                        <span
-                          className={
+                    return (
+                      <li key={item.href}>
+                        <Link
+                          href={item.href}
+                          onClick={() => setIsOpen(false)}
+                          aria-current={isActive ? "page" : undefined}
+                          className={`flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all ${
                             isActive
-                              ? "text-cyan-400 drop-shadow-[0_0_6px_rgba(34,211,238,0.6)]"
-                              : ""
-                          }
+                              ? "border border-cyan-400/30 bg-linear-to-r from-cyan-500/20 via-blue-500/15 to-purple-500/10 text-cyan-400 shadow-lg shadow-cyan-500/20"
+                              : "text-gray-400 hover:bg-linear-to-r hover:from-cyan-500/10 hover:to-blue-500/10 hover:text-white"
+                          }`}
                         >
-                          {item.icon}
-                        </span>
-
-                        {!collapsed && (
-                          <>
-                            <span className='flex-1 text-sm font-medium'>
-                              {item.name}
-                            </span>
-                            {item.badge && (
-                              <span className='bg-red-500/90 shadow shadow-red-500/40 text-white text-xs px-2 py-0.5 rounded-full'>
-                                {item.badge}
-                              </span>
-                            )}
-                          </>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          );
-        })}
-      </nav>
-    </aside>
+                          <span className={isActive ? "text-cyan-400" : ""}>
+                            {item.icon}
+                          </span>
+                          <span className='flex-1 text-sm font-medium'>
+                            {item.name}
+                          </span>
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            );
+          })}
+        </nav>
+      </aside>
+    </>
   );
 }

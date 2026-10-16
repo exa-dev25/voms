@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
+import { handleUnauthorized } from "@/lib/api";
 
 const PieChart = dynamic(() => import("recharts").then((m) => m.PieChart), {
   ssr: false,
@@ -50,6 +51,12 @@ export default function TripStatusDonut() {
           cache: "no-store",
           headers: { Authorization: `Bearer ${session.accessToken}` },
         });
+
+        if (res.status === 401) {
+          handleUnauthorized();
+          setData([]);
+          return;
+        }
 
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
 

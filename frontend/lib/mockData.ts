@@ -50,7 +50,7 @@ export const generateFallbackData = (): VehicleData[] => {
       route: `${route.from} → ${route.to}`,
       latitude: vehiclePosition.latitude,
       longitude: vehiclePosition.longitude,
-      speed: vehiclePosition.speed,
+      speed: vehiclePosition.speed ?? 0,
       timestamp: new Date().toISOString(),
     };
   });
